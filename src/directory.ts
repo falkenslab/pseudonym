@@ -336,6 +336,37 @@ export async function forget(alias: string): Promise<boolean> {
   });
 }
 
+/**
+ * Forgets a whole service (closing a course): people met only there are removed; people also met in other
+ * services keep their entry, without that service's id.
+ */
+export async function forgetService(service: string): Promise<{ removed: number; kept: number }> {
+  return update((data) => {
+    let removed = 0;
+    let kept = 0;
+    data.entries = data.entries.filter((entry) => {
+      if (!hasService(entry, service)) return true;
+      if (entry.services.length === 1) {
+        removed++;
+        return false;
+      }
+      entry.services = entry.services.filter((s) => s.service !== service);
+      kept++;
+      return true;
+    });
+    return { removed, kept };
+  });
+}
+
+/** Empties the directory. The key stays: someone met again gets the same alias back. Returns how many were removed. */
+export async function forgetAll(): Promise<number> {
+  return update((data) => {
+    const removed = data.entries.length;
+    data.entries = [];
+    return removed;
+  });
+}
+
 /** Removes everyone not seen since `date` (retention). Returns how many. */
 export async function prune(date: Date): Promise<number> {
   const limit = date.toISOString();

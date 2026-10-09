@@ -31,6 +31,32 @@ Forgot A-7K3F9Q.
 
 Forgetting removes the person from the directory, not from the data your programs or the model's provider may already hold. It's one piece of an erasure request, not all of it.
 
+## Forget a whole service
+
+When a course closes, or you stop using a program:
+
+```text
+$ pseudonym forget --service moodle@campus.example.org
+This removes the 28 people met in moodle@campus.example.org and can't be undone. Type moodle@campus.example.org to confirm: moodle@campus.example.org
+Forgot moodle@campus.example.org: removed 27 people; 1 person also met in other services kept.
+```
+
+- People met **only** in that service are removed.
+- People also met in other services (with [linking](../guides/concepts.md#per-service-aliases-and-linking), or [linked](#link-two-aliases) by you) keep their entry and alias, without that service's id.
+- `pseudonym services` shows which services there are, and how many people each has. A service the directory doesn't know: exit code `2`, nothing changes.
+
+## Forget everyone
+
+```bash
+pseudonym forget --all
+```
+
+Empties the directory, after you type `all` to confirm. **The key stays**: anyone met again gets the same alias as before, recomputed. To start over with new aliases for everyone, delete the whole folder instead (see [If the key is lost for good](the-key.md#if-the-key-is-lost-for-good)).
+
+## Confirming without a terminal
+
+Both ask you to type the service's name (or `all`), because they can't be undone. In a script, where there is no terminal to ask, add `--yes`; without it, they exit with code `1` and change nothing.
+
 ## Remove people not seen for a while
 
 For a retention limit:

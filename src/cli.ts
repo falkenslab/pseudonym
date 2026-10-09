@@ -2,8 +2,9 @@
 // The `pseudonym` command, for the person in charge only: it resolves aliases and manages the key.
 // Never something an agent should be allowed to run (see the README's client permissions).
 import { readFile, rename } from "node:fs/promises";
+import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
-import { aliasOf, directoryPath, forget, link, peopleIn, prune, remember, reveal, services as listServices, whois, type Entry, type Person } from "./directory.js";
+import { aliasOf, directoryPath, forget, forgetAll, forgetService, link, peopleIn, prune, remember, reveal, services as listServices, whois, type Entry, type Person } from "./directory.js";
 import { PseudonymError } from "./errors.js";
 import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "./home.js";
 import { redact } from "./redact.js";
@@ -26,6 +27,8 @@ Commands:
   resolve <alias> [--service <service>]  the service's id behind an alias (also --json)
   link <alias> <alias>               the same person: keep the first alias, the second resolves to it
   forget <alias>                     remove a person from the directory
+  forget --service <service> | --all [--yes]
+                                     remove a whole service, or everyone (asks to confirm)
   prune --older-than <n>(d|m|y)      remove people not seen for that long
   key fingerprint                    a short code of the key, to compare machines
   key export                         print the key, to back it up or move it
@@ -240,6 +243,62 @@ async function resolveCommand(args: string[]): Promise<number> {
   return OK;
 }
 
+/**
+ * Whether the person confirms a removal that can't be undone: --yes, or, on a terminal, typing `word` back.
+ * Without a terminal and without --yes, nothing is removed.
+ */
+async function confirmed(word: string, what: string, yes: boolean | undefined): Promise<boolean> {
+  if (yes) return true;
+  if (!process.stdin.isTTY) {
+    warn(`This removes ${what} and can't be undone: add --yes to confirm when not on a terminal. Nothing was changed.`);
+    return false;
+  }
+  const prompt = createInterface({ input: process.stdin, output: process.stderr });
+  try {
+    const answer = await prompt.question(`This removes ${what} and can't be undone. Type ${word} to confirm: `);
+    if (answer.trim() === word) return true;
+    warn("Not confirmed: nothing was changed.");
+    return false;
+  } finally {
+    prompt.close();
+  }
+}
+
+async function forgetCommand(args: string[]): Promise<number> {
+  const { values, positionals } = parse(args, { service: { type: "string" }, all: { type: "boolean" }, yes: { type: "boolean" } }, "forget");
+  const modes = [positionals.length > 0, values.service !== undefined, values.all === true].filter(Boolean).length;
+  if (modes !== 1) throw new PseudonymError('"forget" takes one of: an alias, --service <service>, or --all. Run "pseudonym help".');
+
+  if (values.all) {
+    const people = (await listServices()).length ? `everyone in the directory` : "nobody (the directory is empty)";
+    if (!(await confirmed("all", people, values.yes))) return 1;
+    const removed = await forgetAll();
+    out(`Forgot ${plural(removed, "person", "people")}. The key is kept: anyone met again gets the same alias.`);
+    return OK;
+  }
+
+  if (values.service !== undefined) {
+    const service = values.service;
+    const known = (await listServices()).find((s) => s.service === service);
+    if (!known) {
+      warn(`The directory has nobody in "${service}".`);
+      return NOT_FOUND;
+    }
+    if (!(await confirmed(service, `the ${plural(known.people, "person", "people")} met in ${service}`, values.yes))) return 1;
+    const { removed, kept } = await forgetService(service);
+    out(`Forgot ${service}: removed ${plural(removed, "person", "people")}; ${plural(kept, "person", "people")} also met in other services kept.`);
+    return OK;
+  }
+
+  const alias = positionals[0]!;
+  if (!(await forget(alias))) {
+    warn(`Nobody in the directory has the alias ${alias}.`);
+    return NOT_FOUND;
+  }
+  out(`Forgot ${alias.trim().toUpperCase()}.`);
+  return OK;
+}
+
 async function servicesCommand(args: string[]): Promise<number> {
   const { values } = parse(args, { json: { type: "boolean" } }, "services");
   const list = await listServices();
@@ -379,15 +438,8 @@ export async function run(args: string[]): Promise<number> {
       out(`${kept} kept; ${b.trim().toUpperCase()} now resolves to it.`);
       return OK;
     }
-    case "forget": {
-      const alias = need(rest[0], "an alias");
-      if (!(await forget(alias))) {
-        warn(`Nobody in the directory has the alias ${alias}.`);
-        return NOT_FOUND;
-      }
-      out(`Forgot ${alias.trim().toUpperCase()}.`);
-      return OK;
-    }
+    case "forget":
+      return forgetCommand(rest);
     case "prune": {
       const removed = await prune(parseAge(need(option(rest, "--older-than"), "--older-than <n>(d|m|y)")));
       out(`Removed ${removed} ${removed === 1 ? "person" : "people"}.`);
