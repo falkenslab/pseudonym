@@ -46,27 +46,28 @@ Do not read the whole `.minispec/` — only what the task needs.
 - Check the result against the feature's **Acceptance** section, point by point.
 - Report what passes and what doesn't.
 
-### 5. Close the feature (remind, don't auto-delete)
+### 5. Close the feature
 
-When the feature is done and verified, MiniSpec says to:
+Closing is part of implementing (the owner's standing rule): once the feature is done and verified, without asking again:
 
-1. Promote anything **permanent** it revealed — a decision → ADR
-   (`/minispec-adr`), a rule → `core/conventions.md`, a term → `core/glossary.md`.
-2. Then **delete** `features/<slug>.md`.
+1. Promote anything **permanent** it revealed: a decision → ADR (`/minispec-adr`), a rule → `core/conventions.md`, a term → `core/glossary.md`, a module → `core/architecture.md`.
+2. **Delete** `features/<slug>.md`, in the same commit as the implementation (or its last commit), whose message says `Closes #N`. Use the `commit` skill.
+3. Push, so the issue closes.
 
-Tell the user this and offer to do it. Do not delete without confirmation.
+If the feature is only partly done, don't delete the note or close the issue: say what's missing.
 
-### 6. Close its issue
+### 6. Close its issue with a summary
 
-Every feature and bugfix note has a GitHub issue (label `feature` or `fix`), linked from the `Issue:` line under the note's title (otherwise find it by the file's path in its body, `gh issue list --search`). When the work is committed and pushed:
+Every feature and bugfix note has a GitHub issue (label `feature` or `fix`), linked from the `Issue:` line under the note's title (otherwise find it by the file's path in its body, `gh issue list --search`). Once the commit is pushed:
 
-- reference it in the commit that completes it (`Closes #N`), the same commit that deletes the note;
-- then comment on it, in English, a short description of the solution and how it was implemented (what changed for the caller or the person, the design choices, how it was verified, the commits) and make sure it's closed (`gh issue close N --comment "…"` if the commit didn't close it).
+- comment on the issue, in English, a summary of the solution and how it was implemented: what changed for the caller or the person, the design choices (and any deviation from the note, with its reason), how it was verified (tests, counts), and the commits (`gh issue comment N --body-file …`);
+- make sure it's closed (`gh issue close N` if the commit didn't close it).
 
-No issue found (or no GitHub remote yet): say so and offer to open one; don't close an issue for work that isn't pushed.
+No issue found (or no GitHub remote yet): say so and offer to open one; never close an issue for work that isn't pushed.
 
 ## Rules
 
 - Don't invent requirements not in the spec; if the spec is thin, ask before
   coding.
 - This skill chooses and implements; it does not rewrite the spec.
+- Asked to implement several notes, do them one at a time in dependency order, each closed (note deleted, issue closed with its summary) before starting the next.
