@@ -42,6 +42,15 @@ npm version <patch|minor|major> --no-git-tag-version
 
 This updates `package.json` and `package-lock.json`. `grep -rn "<old version>" README.md src` in case a version slipped in elsewhere.
 
+Then snapshot the documentation for this version (the site shows the latest released version by default, and keeps each release's documentation; `main` stays at `/docs/next`):
+
+```
+npm run docs:version -- X.Y.Z
+npm run docs:build
+```
+
+This copies `docs/content/` (the generated API reference included) to `docs/versioned_docs/version-X.Y.Z/` and adds the version to `docs/versions.json`. The build must pass.
+
 ## 3b. Notes
 
 Draft the release notes in English from the commits since the last tag, grouped as: new features, fixes, breaking changes (with migration hints), internal. Only include what matters to a caller of the library or to the person running the CLI.
@@ -49,7 +58,7 @@ Draft the release notes in English from the commits since the last tag, grouped 
 ## 4. Commit, tag, push, publish
 
 ```
-git add package.json package-lock.json
+git add package.json package-lock.json docs/versioned_docs docs/versioned_sidebars docs/versions.json
 git commit -m "chore(release): vX.Y.Z"   # plus the attribution trailer required by the session
 git tag vX.Y.Z
 git push origin main
@@ -60,6 +69,8 @@ npm publish
 
 `npm publish` runs `prepublishOnly` and `prepare` (the build) first. Check `npm pack --dry-run` beforehand if `files` or the build changed: the tarball must hold `dist/` (with `cli.js` and the `.d.ts` files) and nothing else but the README, the license and `package.json`. If the account has two-factor authentication, it asks for a one-time code: ask the user for it and run `npm publish --otp=<code>`. A published version can't be reused; if something is wrong after publishing, fix it with a new patch release.
 
+If the owner prefers to publish to npm themselves (as for 0.1.0), do everything else and hand them the exact command (`npm publish` from the repo root, on `main`, clean). A new version can take several minutes to appear in the registry (`npm view` gave 404 for a while after 0.1.0 was published): wait and check again before concluding it failed.
+
 Tags in this repo are lightweight (`git tag vX.Y.Z`). Never move or delete an existing tag, and never force-push. If a step fails half-way, report the exact state (what is pushed, what is published, what is not) instead of retrying blindly.
 
 ## 5. Verify the release
@@ -67,6 +78,7 @@ Tags in this repo are lightweight (`git tag vX.Y.Z`). Never move or delete an ex
 - `git ls-remote --tags origin` shows the tag on the release commit.
 - `gh release view vX.Y.Z` works.
 - `npm view @falkenslab/pseudonym version` shows the new version.
-- Prove the install path in a scratch directory (the session scratchpad, not the repo): `npm install @falkenslab/pseudonym@X.Y.Z`, then check that `node_modules/@falkenslab/pseudonym/dist/index.js` exists and `npx pseudonym help` prints the usage.
+- Prove the install path in a scratch directory (the session scratchpad, not the repo): `npm install @falkenslab/pseudonym@X.Y.Z`, then check that `node_modules/@falkenslab/pseudonym/dist/index.js` and `node_modules/.bin/pseudonym` exist, and that importing the library with a temporary `PSEUDONYM_HOME` works (`remember`, `resolve`, `redact`). Don't run the `pseudonym` command yourself: the owner's client denies it to agents, and getting around the rule with another spelling is exactly what it's there to stop. Ask the owner to run `npx @falkenslab/pseudonym help`.
+- The documentation workflow ran for the release commit (`gh run list --workflow docs.yml --limit 1`) and https://falkenslab.github.io/pseudonym/docs shows the new version in the version selector.
 
 Report the version, the tag, the release URL, the npm package page and the notes you published. Mention that callers pinned to an older version (`moodle-mcp` first) must bump their dependency themselves.

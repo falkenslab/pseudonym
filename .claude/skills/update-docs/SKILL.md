@@ -1,11 +1,11 @@
 ---
 name: update-docs
-description: Keep pseudonym's documentation in step with the code - the README, the CLI's usage text, the doc comments of the public API and .minispec/core. Use after ANY change to src/ or the package scripts, before every commit of such a change, and before a release. A change is not done until its documentation is.
+description: Keep pseudonym's documentation in step with the code - the documentation site (docs/, Docusaurus, published at falkenslab.github.io/pseudonym), the README, the CLI's usage text, the doc comments of the public API, the classroom example and .minispec/core. Use after ANY change to src/, examples/ or the package scripts, before every commit of such a change, and before a release. A change is not done until its documentation is.
 ---
 
 # Keep the documentation up to date
 
-pseudonym has no documentation site: what callers and the person in charge learn comes from the README, the CLI's own help and the doc comments of what `src/index.ts` exports (they ship in `dist/*.d.ts` and show in the caller's editor). Code that changes what a caller or the person sees, and isn't documented, is unfinished work.
+What callers and the person in charge learn comes from the documentation site (`docs/`, published at https://falkenslab.github.io/pseudonym/), the README, the CLI's own help, and the doc comments of what `src/index.ts` exports (they generate the site's API reference and ship in `dist/*.d.ts`). Code that changes what a caller or the person sees, and isn't documented, is unfinished work.
 
 ## 1. Find what changed
 
@@ -25,22 +25,49 @@ For each change, ask: would a caller (an MCP server using the library) or the pe
 
 Internal refactors, tests and comments with no visible effect need no documentation change (but see doc comments below).
 
-## 2. Update the owners
+## 2. Find the pages
 
-- **Doc comments** on every new or changed export from `src/index.ts`: what it's for and when to use it, not how it's built. Cryptographic choices name their construction and parameters (conventions).
-- **The CLI's usage text** (`USAGE` in `src/cli.ts`): every command it implements, with its arguments; drop the "coming one by one" wording for commands that exist.
-- **`README.md`** (for callers and the person in charge): what the library does, how a program uses it, the CLI commands. It stays short; touch it when the change adds something a reader would notice at that level, and keep its "Status" line true.
-- **`.minispec/core/`** (for future Claude sessions): `architecture.md` when a module appears, moves or changes role (and drop "Nothing is built yet" once it isn't true); `glossary.md` for a new domain term; `project.md` when what the project does or its status changes; a new or updated ADR (`minispec-adr`) when a decision or rule changed. Respect MiniSpec's line limits and don't duplicate what the code says.
+Pages live in `docs/content/`; `docs/sidebars.ts` is the map. Typical owners:
 
-Search too: `grep -rn "<the option, command or function>" README.md .minispec src` finds every place that mentions it, so none keeps describing the old behavior.
+| Change in | Pages |
+| --- | --- |
+| Install, requirements, environment variables | `guides/installation.md` |
+| Identifiers, normalization, alias format, linking, the directory's contents | `guides/concepts.md`, `security/how-it-works.md` |
+| `remember()`, `resolve()`, errors, warnings | `guides/integrating.md` |
+| `redact()`: names, patterns, what it misses | `guides/redaction.md`, `security/threat-model.md` |
+| Testing advice, `PSEUDONYM_HOME` | `guides/testing.md` |
+| `whois`, `alias`, `aliases` | `cli/resolving-aliases.md`, `cli/reference.md` |
+| `link`, `forget`, `prune` | `cli/tidying-the-directory.md`, `cli/reference.md` |
+| `key fingerprint`, `export`, `import` | `cli/the-key.md`, `cli/reference.md` |
+| Files in the folder, lock, encryption, key creation | `security/how-it-works.md`, `cli/reference.md` |
+| What it protects against, legal frame | `security/threat-model.md`, `security/gdpr.md` |
+| Client deny rules and their tests | `security/keeping-agents-away.md` |
+| `examples/classroom-mcp` | `example/classroom-mcp.md` and the example's README |
+| What the library offers overall | `intro.md`, the home page (`docs/src/pages/index.tsx`), `README.md` |
 
-## 3. Style
+Search too: `grep -rn "<the option, command or function>" docs/content README.md examples .minispec src` finds every place that mentions it, so none keeps describing the old behavior.
+
+## 3. Update them
+
+- **Doc comments** on every new or changed export from `src/index.ts`: what it's for and when to use it, not how it's built (each overload gets its own). Cryptographic choices name their construction and parameters (conventions). An export without one shows as "-" in the API reference.
+- **The site's pages**: change the existing explanation rather than appending a note that contradicts it. Pages are CommonMark (`.md`), not MDX: write `<placeholders>` inside backticks. A new page goes in `docs/sidebars.ts`, linked from the pages that lead to it.
+- **Never edit `docs/versioned_docs/`**: those are released versions. The only exception is a factual error in what that version actually did.
+- **The CLI's usage text** (`USAGE` in `src/cli.ts`): every command it implements, with its arguments.
+- **`README.md`**: short on purpose (what it is, install, quick start, the essentials of safety, links to the site). Touch it only when the change matters at that level.
+- **`.minispec/core/`** (for future Claude sessions): `architecture.md` when a module appears, moves or changes role; `glossary.md` for a new domain term; `project.md` when what the project does or its status changes; a new or updated ADR (`minispec-adr`) when a decision or rule changed. Respect MiniSpec's line limits.
+
+## 4. Build the site
+
+```
+npm run docs:build
+grep -rE "\| - \|$" docs/content/api
+```
+
+The build fails on a broken link or anchor; the grep must print nothing (every export documented). If `docs/node_modules` is missing, run `npm run docs:install` first. Fix the cause; never turn a check off.
+
+## 5. Style and commit
 
 - English, technical and concrete, following the `markdown-writing` rules: one line per paragraph and list item, no horizontal rules between sections.
-- Change the existing explanation rather than appending a note that contradicts it.
+- The documentation goes in the same commit as the change it describes (or right next to it, `docs: …`). When the change completes a MiniSpec feature or fix, its issue's closing comment mentions what was documented.
 
-## 4. Commit with the code
-
-The documentation goes in the same commit as the change it describes (or right next to it, `docs: …`, when one commit per concern reads better). When the change completes a MiniSpec feature or fix, its issue's closing comment mentions what was documented.
-
-Report which files you changed, or why none needed to.
+Report which pages and files you changed, or why none needed to.

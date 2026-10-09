@@ -225,11 +225,14 @@ function rememberOne(data: Data, k: Keys, person: Person, now: string): string {
 }
 
 /**
- * The alias of a person, or of each person in a list (same order, one write for the whole list). A person
- * already in the directory for that service keeps their first alias, even if an identifier changed;
- * someone new gets one computed from their strongest identifier.
+ * The alias of a person. A person already in the directory for that service keeps their first alias, even if
+ * an identifier changed; someone new gets one computed from their strongest identifier.
  */
 export function remember(person: Person): Promise<string>;
+/**
+ * The alias of each person in a list, in the same order, with one write to the directory for the whole list:
+ * prefer it whenever a result holds several people.
+ */
 export function remember(people: Person[]): Promise<string[]>;
 export async function remember(input: Person | Person[]): Promise<string | string[]> {
   const people = Array.isArray(input) ? input : [input];

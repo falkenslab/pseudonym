@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run the full quality gate for pseudonym (typecheck, lint, tests, build) and report the result. Use before committing, before a release, and after any change under src/ or test/.
+description: Run the full quality gate for pseudonym (typecheck, lint, tests, build, the classroom example and the documentation site) and report the result. Use before committing, before a release, and after any change under src/, test/, examples/ or docs/.
 ---
 
 # Verify pseudonym
@@ -13,7 +13,10 @@ npm run lint
 npm test
 npm run build
 (cd examples/classroom-mcp && npm install && npm run typecheck && npm test)
+npm run docs:build
 ```
+
+- `npm run docs:build` builds the documentation site (`docs/`, Docusaurus) and fails on a broken link or anchor; its API reference is generated from `src/`'s doc comments, so it also catches a doc comment that breaks the site. If `docs/node_modules` is missing, run `npm run docs:install` first. Run it whenever `docs/`, `examples/` or anything exported from `src/index.ts` changed; skip it (and say so) only for changes that touch none of them. After it, `grep -rE "\| - \|$" docs/content/api` must print nothing.
 
 Notes:
 

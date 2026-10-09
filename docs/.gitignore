@@ -1,0 +1,8 @@
+# Dependencies and build output
+node_modules/
+build/
+.docusaurus/
+.cache-loader/
+
+# Generated on every build from the library's doc comments (TypeDoc)
+content/api/

@@ -3,6 +3,7 @@
 import { peopleIn, type Entry } from "./directory.js";
 import { fold } from "./text.js";
 
+/** What `redact()` returns: the text safe to send, and how many replacements of each kind it made. */
 export interface Redacted {
   text: string;
   /** How many replacements of each kind were made: counts, never the values. */

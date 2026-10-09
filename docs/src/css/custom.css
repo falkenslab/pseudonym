@@ -1,0 +1,28 @@
+/* A deep teal: calm, and apart from agent-kit's indigo. */
+:root {
+  --ifm-color-primary: #0f766e;
+  --ifm-color-primary-dark: #0e6a63;
+  --ifm-color-primary-darker: #0d645e;
+  --ifm-color-primary-darkest: #0a524d;
+  --ifm-color-primary-light: #118279;
+  --ifm-color-primary-lighter: #12887e;
+  --ifm-color-primary-lightest: #149a8f;
+  --ifm-code-font-size: 92%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #2dd4bf;
+  --ifm-color-primary-dark: #22c7b2;
+  --ifm-color-primary-darker: #20bca8;
+  --ifm-color-primary-darkest: #1a9b8a;
+  --ifm-color-primary-light: #45d9c6;
+  --ifm-color-primary-lighter: #51dbca;
+  --ifm-color-primary-lightest: #74e3d5;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Terminal output keeps its alignment. */
+pre code {
+  font-variant-ligatures: none;
+}
