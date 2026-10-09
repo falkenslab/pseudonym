@@ -1,8 +1,6 @@
 # pseudonym
 
 [![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
-[![npm downloads](https://img.shields.io/npm/dm/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
-[![release](https://img.shields.io/github/v/release/falkenslab/pseudonym?logo=github)](https://github.com/falkenslab/pseudonym/releases)
 [![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
 [![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](LICENSE)
