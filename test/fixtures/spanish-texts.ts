@@ -5,7 +5,7 @@
 
 let seed = 20261009;
 const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
-const digits = (n) => Array.from({ length: n }, () => Math.floor(rand() * 10)).join("");
+const digits = (n: number) => Array.from({ length: n }, () => Math.floor(rand() * 10)).join("");
 const LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE";
 
 export function dni() {
@@ -13,11 +13,11 @@ export function dni() {
   return `${n}${LETTERS[Number(n) % 23]}`;
 }
 export function nie() {
-  const prefix = "XYZ"[Math.floor(rand() * 3)];
+  const prefix = "XYZ".charAt(Math.floor(rand() * 3));
   const n = digits(7);
   return `${prefix}${n}${LETTERS[Number(`${"XYZ".indexOf(prefix)}${n}`) % 23]}`;
 }
-export function iban(spaced) {
+export function iban(spaced: boolean) {
   const bban = digits(20);
   // ES = 1428; check digits so that the rearranged number mod 97 is 1.
   const rest = BigInt(`${bban}142800`) % 97n;
@@ -29,14 +29,18 @@ const mobile = () => `6${digits(2)} ${digits(3)} ${digits(3)}`;
 const landline = () => `+34 91 ${digits(3)} ${digits(2)} ${digits(2)}`;
 const mobileIntl = () => `+34 7${digits(8)}`;
 
-const NAMES = ["Lucía Ferrándiz", "Marcos Olabarría", "Irene Quintanilla", "Hugo Estrella", "Nerea Valbuena", "Íker Montalbán"];
+export const NAMES = ["Lucía Ferrándiz", "Marcos Olabarría", "Irene Quintanilla", "Hugo Estrella", "Nerea Valbuena", "Íker Montalbán"];
 const STREETS = ["Calle del Olmo Seco 14, 3.º B, 28045 Madrid", "Avenida de la Ribera 7, bajo, 46011 Valencia", "C/ Pintor Albéniz 22, 1.º 2.ª, 41005 Sevilla", "Plaza de los Tilos 3, 38004 Santa Cruz de Tenerife"];
-const pick = (list) => list[Math.floor(rand() * list.length)];
+const pick = (list: string[]) => list[Math.floor(rand() * list.length)];
 
-/** Each text with the personal data in it, by kind. */
-export function buildDataset() {
-  const texts = [];
-  const add = (text, entities) => texts.push({ id: texts.length + 1, text, entities });
+export type EntityKind = "dni" | "nie" | "phone" | "email" | "iban" | "address" | "birthdate" | "name";
+export interface Entity { kind: EntityKind; value: string }
+export interface Sample { id: number; text: string; entities: Entity[] }
+
+/** Each text with the personal data in it, by kind. Call it once per process: the seed advances with every call. */
+export function buildDataset(): Sample[] {
+  const texts: Sample[] = [];
+  const add = (text: string, entities: Entity[]) => texts.push({ id: texts.length + 1, text, entities });
   for (let i = 0; i < 6; i++) {
     const d = dni();
     add(`Hola profe, no puedo entrar al aula virtual. Mi DNI es ${d}, por si lo necesitas para revisarlo.`, [{ kind: "dni", value: d }]);
@@ -61,16 +65,14 @@ export function buildDataset() {
     const b = iban(i % 2 === 0);
     add(`Para el pago de la excursión, mi cuenta es ${b} (a nombre de mi madre).`, [{ kind: "iban", value: b }]);
   }
-  for (let i = 0; i < 4; i++) {
-    const a = STREETS[i];
+  for (const a of STREETS) {
     add(`Vivo en ${a}, así que puedo acercar los materiales al centro.`, [{ kind: "address", value: a }]);
   }
-  for (const [text, value] of [
+  for (const [text, value] of <[string, string][]>[
     ["Nací el 12/03/2006, así que soy menor y necesito autorización.", "12/03/2006"],
     ["Fecha de nacimiento: 3 de mayo de 2005.", "3 de mayo de 2005"],
   ]) add(text, [{ kind: "birthdate", value }]);
-  for (let i = 0; i < 4; i++) {
-    const n = NAMES[i];
+  for (const n of NAMES.slice(0, 4)) {
     add(`Me llamo ${n} y soy nueva en el grupo B, encantada.`, [{ kind: "name", value: n }]);
   }
   // Several kinds together, as in a real introduction post.

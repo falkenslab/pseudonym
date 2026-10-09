@@ -23,7 +23,7 @@ Every consumer that sends free text to a model needs the same thing, and half of
 
 ## Consequences
 
-- No dependency: five regular expressions with check digits, tested against the spike's texts (`test/fixtures/spanish-texts.mjs`).
+- No dependency: five regular expressions with check digits, tested against the spike's texts (`test/fixtures/spanish-texts.ts`).
 - Our one false positive was a phone-shaped number in a sum (`600123456`); hiding such numbers is acceptable.
 - Street addresses and dates of birth are not detected, by any option measured; consumers' READMEs say so. Names other than the directory's (a classmate mentioned in passing) aren't either.
 - New patterns (other countries' ids, addresses) come with texts in the fixture that show they help and don't add noise in code.

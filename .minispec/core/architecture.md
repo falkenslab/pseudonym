@@ -19,6 +19,6 @@ person's terminal --pseudonym <command>--> cli.ts -> the same modules
 ## Folder map
 
 - `src/` — the library and the CLI.
-- `test/` — tests mirroring `src/`; `test/fixtures/spanish-texts.mjs`, the redaction spike's texts with their expected entities.
+- `test/` — tests mirroring `src/`; `test/fixtures/spanish-texts.ts`, the redaction spike's texts with their expected entities.
 
 Nothing is built yet: the modules come with the features in `features/`.
