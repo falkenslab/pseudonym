@@ -23,7 +23,7 @@ flowchart LR
 - **The alias** is an [HMAC](https://www.rfc-editor.org/rfc/rfc2104) of the person's best identifier under a key that never leaves the machine: always the same for the same person, impossible to undo without the key.
 - **The directory** is a local encrypted file that remembers who each alias is: it keeps a person's first alias when their email changes, and lets the person in charge resolve aliases offline.
 - **One key and one directory per user**, shared by every program on the machine that uses the library.
-- **Free text** (a submission, a forum post) can be redacted too: known people become their aliases, and contact and identity data become placeholders.
+- **Free text** (a submission, a forum post) can be redacted too: known people become their aliases, and emails, payment cards, IBANs and the national ids and phones of the countries you choose become placeholders.
 
 ## What it isn't
 

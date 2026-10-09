@@ -73,13 +73,13 @@ describe("redact", () => {
     useTempHome();
     const result = await redact("ana@correo.ficticio.es, ANA@correo.ficticio.es y luis@correo.ficticio.es; 612 345 678 o +34 612345678.", { service });
     assert.equal(result.text, "[EMAIL_1], [EMAIL_1] y [EMAIL_2]; [PHONE_1] o [PHONE_1].");
-    assert.deepEqual(result.replaced, { names: 0, emails: 3, phones: 2, ids: 0, ibans: 0 });
+    assert.deepEqual(result.replaced, { names: 0, emails: 3, phones: 2, ids: 0, ibans: 0, cards: 0 });
   });
 
   it("checks DNI, NIE and IBAN check digits", async () => {
     useTempHome();
     const result = await redact("DNI 12345678Z, falso 12345678A, NIE X1234567L, IBAN ES91 2100 0418 4502 0005 1332, falso ES00 2100 0418 4502 0005 1332.", { service });
     assert.equal(result.text, "DNI [DNI_1], falso 12345678A, NIE [NIE_1], IBAN [IBAN_1], falso ES00 2100 0418 4502 0005 1332.");
-    assert.deepEqual(result.replaced, { names: 0, emails: 0, phones: 0, ids: 2, ibans: 1 });
+    assert.deepEqual(result.replaced, { names: 0, emails: 0, phones: 0, ids: 2, ibans: 1, cards: 0 });
   });
 });

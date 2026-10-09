@@ -7,7 +7,7 @@ import { parseArgs } from "node:util";
 import { aliasOf, directoryPath, forget, forgetAll, forgetService, link, peopleIn, prune, remember, reveal, services as listServices, whois, type Entry, type Person } from "./directory.js";
 import { PseudonymError } from "./errors.js";
 import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "./home.js";
-import { redact } from "./redact.js";
+import { checkCountries, redact, type Country } from "./redact.js";
 import { readSecret } from "./secret.js";
 import { csvField, csvLine, parseCsv } from "./csv.js";
 
@@ -18,7 +18,8 @@ Commands:
   alias "<name>"                     the aliases of people with that name, and their services
   aliases [--service <service>]      a service's people as CSV (alias,name) on stdout
   services [--json]                  the services in the directory, and how many people each has
-  redact [--service <service>] [file]    a text (file or stdin) with people as aliases and contact data as placeholders
+  redact [--service <service>] [--countries ES,US,…] [file]
+                                     a text (file or stdin) with people as aliases and contact data as placeholders
   reveal [--with-alias] [file]       a text (file or stdin) with every known alias replaced by the person's name
   remember --name <name> [--email <email>] [--institutional-id <id>] [--service-user-id <id>]
                                      a person's alias (also --service, --link, --json)
@@ -136,14 +137,18 @@ function replacedSummary(replaced: Awaited<ReturnType<typeof redact>>["replaced"
     replaced.phones && plural(replaced.phones, "phone", "phones"),
     replaced.ids && plural(replaced.ids, "id", "ids"),
     replaced.ibans && plural(replaced.ibans, "IBAN", "IBANs"),
+    replaced.cards && plural(replaced.cards, "card", "cards"),
   ].filter(Boolean);
   return parts.length ? `Replaced ${parts.join(", ")}.` : "Nothing to replace.";
 }
 
 async function redactCommand(args: string[]): Promise<number> {
-  const { values, positionals } = parse(args, { service: { type: "string" } }, "redact");
+  const { values, positionals } = parse(args, { service: { type: "string" }, countries: { type: "string" } }, "redact");
+  // Checked before reading anything, so a typo fails fast.
+  const countries = values.countries?.split(",").map((c) => c.trim()).filter(Boolean) as Country[] | undefined;
+  if (countries) checkCountries(countries);
   const text = await readInput(positionals[0]);
-  const result = await redact(text, { service: await serviceForRedact(values.service) });
+  const result = await redact(text, { service: await serviceForRedact(values.service), countries });
   process.stdout.write(result.text);
   warn(replacedSummary(result.replaced));
   return OK;

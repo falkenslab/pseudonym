@@ -42,7 +42,7 @@ const aliases = await remember(users.map((user) => ({
 // A write tool gets an alias back from the model.
 const userId = await resolve("A-7K3F9Q", { service });  // keep it on your side
 
-// Text people wrote: known names, emails, phones, DNI, NIE and IBANs out.
+// Text people wrote: known names, emails, cards, IBANs and the ids and phones of your countries out.
 const { text } = await redact(post.message, { service });
 ```
 
@@ -69,7 +69,7 @@ See [the CLI](https://falkenslab.github.io/pseudonym/docs/cli/overview) for ever
 
 ## Before you use it
 
-- **It's pseudonymization, not anonymization**: the data stays personal data for whoever holds the key, and what people write about themselves can still identify them. Redaction doesn't catch street addresses, birth dates or people outside the directory.
+- **It's pseudonymization, not anonymization**: the data stays personal data for whoever holds the key, and what people write about themselves can still identify them. Redaction doesn't catch street addresses, birth dates, people outside the directory, or ids without a check digit.
 - **Keep agents away from the key**: an agent on the same machine that can read the key folder or run `pseudonym` could undo it. Deny both in its client; the documentation gives [tested rules for Claude Code and their limits](https://falkenslab.github.io/pseudonym/docs/security/keeping-agents-away).
 - **Back up the key**: losing it loses every way back, by design.
 

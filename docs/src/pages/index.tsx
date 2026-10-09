@@ -21,7 +21,7 @@ const FEATURES: { title: string; text: string }[] = [
   },
   {
     title: "Free text too",
-    text: "redact() replaces the directory's people in a submission or a post with their aliases, and emails, phones, DNI, NIE and IBANs with placeholders.",
+    text: "redact() replaces the directory's people in a submission or a post with their aliases, and emails, cards, IBANs and national ids of nine countries with placeholders.",
   },
   {
     title: "Inside your program",

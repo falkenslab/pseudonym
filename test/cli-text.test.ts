@@ -85,6 +85,19 @@ describe("pseudonym redact", () => {
     assert.match(typo.stderr, new RegExp(`nobody in "moodle@typo".*${moodle}`));
   });
 
+  it("looks for other countries' ids with --countries, and counts cards", async () => {
+    const text = "SSN 123-45-6789, card 4111 1111 1111 1111, DNI 12345678Z.";
+    const byDefault = await cli(home, ["redact"], text);
+    assert.equal(byDefault.stdout, "SSN 123-45-6789, card [CARD_1], DNI [DNI_1].");
+    const withUs = await cli(home, ["redact", "--countries", "US,es"], text);
+    assert.equal(withUs.stdout, "SSN [US_SSN_1], card [CARD_1], DNI [DNI_1].");
+    assert.match(withUs.stderr, /Replaced 2 ids, 1 card./);
+    const unknown = await cli(home, ["redact", "--countries", "US,XX"], text);
+    assert.equal(unknown.status, 1);
+    assert.equal(unknown.stdout, "");
+    assert.match(unknown.stderr, /Unknown country "XX"/);
+  });
+
   it("exits 1 for a missing file or an unknown option, writing nothing to stdout", async () => {
     const missing = await cli(home, ["redact", path.join(home, "nope.txt")]);
     assert.equal(missing.status, 1);

@@ -1,13 +1,41 @@
-// Free text made safe to send (ADR-005): the directory's people in a service become their aliases, then
-// contact and identity data matched by checked patterns become placeholders. No detection beyond that.
+// Free text made safe to send (ADR-005, ADR-008): the directory's people in a service become their aliases,
+// then contact and identity data matched by checked patterns become placeholders. No detection beyond that.
 import { peopleIn, type Entry } from "./directory.js";
+import { PseudonymError } from "./errors.js";
+import { COUNTRIES, PATTERNS, type Country } from "./patterns.js";
 import { fold } from "./text.js";
+
+export { COUNTRIES, type Country } from "./patterns.js";
 
 /** What `redact()` returns: the text safe to send, and how many replacements of each kind it made. */
 export interface Redacted {
   text: string;
-  /** How many replacements of each kind were made: counts, never the values. */
-  replaced: { names: number; emails: number; phones: number; ids: number; ibans: number };
+  /** How many replacements of each kind were made: counts, never the values. National ids of every country count in `ids`. */
+  replaced: { names: number; emails: number; phones: number; ids: number; ibans: number; cards: number };
+}
+
+/** Options of `redact()`. */
+export interface RedactOptions {
+  /** Whose names to replace: the directory's people met in this service. */
+  service: string;
+  /**
+   * Whose national ids and phones to look for, as ISO 3166 codes (see `COUNTRIES`). Default `["ES"]`. Payment
+   * cards and IBANs of any country are always looked for.
+   */
+  countries?: readonly (Country | Lowercase<Country>)[];
+}
+
+/** The countries asked for, upper-cased, or a `PseudonymError` naming an unknown one. */
+export function checkCountries(countries: readonly string[]): Set<Country> {
+  const wanted = new Set<Country>();
+  for (const code of countries) {
+    const upper = code.toUpperCase();
+    if (!(COUNTRIES as readonly string[]).includes(upper)) {
+      throw new PseudonymError(`Unknown country "${code}" for redaction. Known: ${COUNTRIES.join(", ")}.`);
+    }
+    wanted.add(upper as Country);
+  }
+  return wanted;
 }
 
 interface Name {
@@ -78,64 +106,24 @@ function replaceMatches(text: string, regex: RegExp, replace: (match: RegExpMatc
   return out + text.slice(last);
 }
 
-const LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE";
-
-interface Pattern {
-  kind: "EMAIL" | "DNI" | "NIE" | "IBAN" | "PHONE";
-  counter: keyof Redacted["replaced"];
-  regex: RegExp;
-  valid: (match: RegExpMatchArray) => boolean;
-  /** The same value written differently gets the same placeholder. */
-  key: (value: string) => string;
-}
-
-const compact = (value: string) => value.replace(/[\s-]/g, "").toUpperCase();
-
-// In this order: the IBAN before the phone, whose pattern would take an IBAN's digit groups.
-const PATTERNS: Pattern[] = [
-  { kind: "EMAIL", counter: "emails", regex: /[\p{L}0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/giu, valid: () => true, key: (v) => v.toLowerCase() },
-  { kind: "DNI", counter: "ids", regex: /\b(\d{8})[ -]?([A-Z])\b/g, valid: (m) => LETTERS[Number(m[1]) % 23] === m[2], key: compact },
-  {
-    kind: "NIE",
-    counter: "ids",
-    regex: /\b([XYZ])[ -]?(\d{7})[ -]?([A-Z])\b/g,
-    valid: (m) => LETTERS[Number(`${"XYZ".indexOf(m[1] ?? "")}${m[2]}`) % 23] === m[3],
-    key: compact,
-  },
-  {
-    kind: "IBAN",
-    counter: "ibans",
-    regex: /\bES\d{2}(?:[ ]?\d{4}){5}\b/g,
-    // ISO 13616: the country and check digits moved to the end, letters as numbers (E=14, S=28), mod 97 is 1.
-    valid: (m) => {
-      const iban = m[0].replace(/ /g, "");
-      return BigInt(`${iban.slice(4)}1428${iban.slice(2, 4)}`) % 97n === 1n;
-    },
-    key: compact,
-  },
-  {
-    kind: "PHONE",
-    counter: "phones",
-    regex: /(?<![\w.])(?:\+34[ ]?)?[6789]\d{1,2}(?:[ ]?\d{2,3}){2,4}(?!\w|\.\d)/g,
-    valid: (m) => m[0].replace(/\D/g, "").replace(/^34(?=\d{9}$)/, "").length === 9,
-    key: (v) => v.replace(/\D/g, "").replace(/^34(?=\d{9}$)/, ""),
-  },
-];
-
 /**
  * Free text with the directory's people in `service` replaced by their aliases (full names, case and accent
- * insensitive; a first name alone only when one person has it and the text capitalizes it), then emails,
- * Spanish phones, DNI, NIE and ES IBANs replaced by placeholders such as `[EMAIL_1]`, the same value the same
- * placeholder within the call. Street addresses, birth dates and people outside the directory are not
- * detected. The result carries counts, never the values replaced.
+ * insensitive; a first name alone only when one person has it and the text capitalizes it), then contact and
+ * identity data replaced by placeholders such as `[EMAIL_1]` or `[US_SSN_1]`, the same value the same
+ * placeholder within the call: emails, payment cards and IBANs always; national ids and phones of the
+ * `countries` asked for (Spain by default), each checked with its check digit or impossible ranges. Street
+ * addresses, birth dates and people outside the directory are not detected. The result carries counts, never
+ * the values replaced. Throws a `PseudonymError` for an unknown country.
  */
-export async function redact(text: string, options: { service: string }): Promise<Redacted> {
+export async function redact(text: string, options: RedactOptions): Promise<Redacted> {
+  const countries = checkCountries(options.countries ?? ["ES"]);
   const names = replaceNames(text, namesOf(await peopleIn(options.service)));
-  const replaced: Redacted["replaced"] = { names: names.count, emails: 0, phones: 0, ids: 0, ibans: 0 };
+  const replaced: Redacted["replaced"] = { names: names.count, emails: 0, phones: 0, ids: 0, ibans: 0, cards: 0 };
   const placeholders = new Map<string, string>();
   const numbers = new Map<string, number>();
   let out = names.text;
   for (const pattern of PATTERNS) {
+    if (pattern.countries && !pattern.countries.some((c) => countries.has(c))) continue;
     out = replaceMatches(out, pattern.regex, (match) => {
       if (!pattern.valid(match)) return match[0];
       replaced[pattern.counter]++;

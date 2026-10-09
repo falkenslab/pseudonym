@@ -6,7 +6,7 @@
 | `pseudonym alias "<name>"` | Everyone whose name contains it (case and accent insensitive), with their aliases and services | `0`, `2` nobody |
 | `pseudonym aliases [--service <service>]` | A service's people as CSV (`alias,name`) on stdout, a warning on stderr | `0` |
 | `pseudonym services [--json]` | The services in the directory and how many people each has | `0` |
-| `pseudonym redact [--service <service>] [file]` | The text (file or stdin) with the service's people as aliases and contact data as placeholders; counts on stderr | `0`, `1` several services and none chosen, unreadable file |
+| `pseudonym redact [--service <service>] [--countries ES,US,…] [file]` | The text (file or stdin) with the service's people as aliases and contact data as placeholders (cards, IBANs, and ids and phones of the countries asked for, Spain by default); counts on stderr | `0`, `1` several services and none chosen, unknown country, unreadable file |
 | `pseudonym reveal [--with-alias] [file]` | The text (file or stdin) with every known alias replaced by the person's name | `0`, `1` unreadable file |
 | `pseudonym remember --name <name> [--email …] [--institutional-id …] [--service-user-id …]` | A person's alias (also `--service`, `--link`, `--json`) | `0`, `1` no name or no identifier |
 | `pseudonym remember --csv <file> [--only-aliases]` | Aliases for a whole CSV, as a CSV with an `alias` column first (`--only-aliases` drops names and identifiers); also `--json` | `0`, `1` a row without name or identifier |

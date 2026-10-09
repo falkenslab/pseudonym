@@ -17,7 +17,7 @@ pseudonym: Replaced 1 name, 1 email, 1 phone.
 ```
 
 - It reads the file you give it, or stdin when there is none (or it's `-`), and prints the text to stdout, changed only where something was replaced: line endings and the final newline stay as they were.
-- What it replaces is exactly what [`redact()`](../guides/redaction.md) does: the directory's people of that service become their aliases, and emails, phones, DNI, NIE and IBANs become placeholders. The counts go to stderr, so `> safe.txt` gets only the text.
+- What it replaces is exactly what [`redact()`](../guides/redaction.md) does: the directory's people of that service become their aliases, and emails, payment cards, IBANs and the ids and phones of the countries asked for become placeholders. `--countries US,CA` chooses the countries (Spain by default; see [the table](../guides/redaction.md#by-country)). The counts go to stderr, so `> safe.txt` gets only the text.
 - It only knows the names of people the directory has met. Someone your programs never remembered stays as they are: read the result before pasting it.
 
 ## Which service it uses

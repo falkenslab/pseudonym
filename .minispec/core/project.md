@@ -9,7 +9,7 @@
 - Computes an alias from a person's best identifier with a local secret key (ADR-002): the same person always gets the same alias, and nobody without the key can undo it.
 - Keeps a local encrypted directory of the people it has met (alias, display name, service ids, hashed identifiers), so aliases survive an email change and resolve offline (ADR-003).
 - Shares one key and one directory between every program on the machine that uses it (ADR-003).
-- Redacts free text: the directory's known names become aliases, and emails, Spanish phones, DNI, NIE and IBANs become placeholders (ADR-005).
+- Redacts free text: the directory's known names become aliases, and emails, payment cards, IBANs and the checked national ids and phones of nine countries, chosen per call, become placeholders (ADR-005, ADR-008).
 - Gives the person a CLI that covers its use cases without code (ADR-007): `whois`, `alias`, `aliases`, `services`, `redact`, `reveal`, `remember`, `resolve`, `link`, `forget`, `prune`, `key export | import | fingerprint`.
 
 ## What it doesn't do

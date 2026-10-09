@@ -70,7 +70,7 @@ The first match wins. If a weaker identifier points to a different entry, the en
 
 ## Redaction
 
-Names are found on a **folded** copy of the text: each UTF-16 unit lower-cased and stripped of its accent, so the copy has exactly the same length and every match has the same position in the original. Word boundaries are lookarounds on Unicode letters and digits, because `\b` is ASCII-only in JavaScript even with the `u` flag. Then five regular expressions run in a fixed order, each value checked (DNI and NIE letters, IBAN mod 97, phone length) before it's replaced. See [Redacting free text](../guides/redaction.md).
+Names are found on a **folded** copy of the text: each UTF-16 unit lower-cased and stripped of its accent, so the copy has exactly the same length and every match has the same position in the original. Word boundaries are lookarounds on Unicode letters and digits, because `\b` is ASCII-only in JavaScript even with the `u` flag. Then the patterns of `src/patterns.ts` run in a fixed order (emails, IBANs, cards, national ids, phones last, so a phone pattern never takes another value's digit groups), only those of the countries asked for, each value checked (Luhn, mod 97, check letters and digits, issued ranges) before it's replaced. See [Redacting free text](../guides/redaction.md).
 
 ## The CLI's key input
 
