@@ -8,6 +8,8 @@ Before writing any code, read `.minispec/README.md` and follow its reading contr
 
 Pending work lives in `.minispec/features/`; the `minispec-implement` skill picks one and implements it, and `minispec-feature`, `minispec-adr` and `minispec-bugfix` create new documents from the templates.
 
+Every feature or fix note has exactly one GitHub issue in `falkenslab/pseudonym` (label `feature` or `fix`), and every such issue has its note: the note carries an `Issue: [#N](<url>)` line under its title, the issue's last line points to the note's path. Creating a note opens its issue; the commit that implements it and deletes the note says `Closes #N`, followed by a comment on the issue summarizing the solution. Never write a note without its issue or an issue without its note; `sync-issues` repairs any drift.
+
 Project management goes through skills in `.claude/skills/`: `commit` (runs `update-docs` and `verify` first), `release` (only when asked), `sync-issues`.
 
 ## Commands
