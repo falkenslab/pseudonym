@@ -2,7 +2,7 @@
 
 Stable aliases for people, for programs that send data about them to a language model. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
 
-> **Status: early development.** Nothing is published to npm yet and the API below is the design being implemented, not a released one: [#1](https://github.com/falkenslab/pseudonym/issues/1) key and aliases, [#2](https://github.com/falkenslab/pseudonym/issues/2) directory, [#3](https://github.com/falkenslab/pseudonym/issues/3) redaction, [#4](https://github.com/falkenslab/pseudonym/issues/4) CLI. Names and signatures may still change in `0.x`.
+> **Status: 0.x, not yet published to npm.** The API below is implemented and tested; names and signatures may still change before `1.0`.
 
 ## When to use it
 

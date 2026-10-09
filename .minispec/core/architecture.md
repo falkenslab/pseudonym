@@ -21,5 +21,3 @@ person's terminal --pseudonym <command>--> cli.ts -> the same modules
 
 - `src/` — the library and the CLI.
 - `test/` — tests mirroring `src/`; `test/fixtures/spanish-texts.ts`, the redaction spike's texts with their expected entities.
-
-Modules not built yet come with the notes in `features/`.

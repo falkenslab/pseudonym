@@ -4,6 +4,7 @@ import { hkdfSync, randomBytes } from "node:crypto";
 import { access, link, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { base32 } from "./aliases.js";
 import { PseudonymError } from "./errors.js";
 
 export const KEY_BYTES = 32;
@@ -101,4 +102,9 @@ export type Purpose = "aliases" | "directory" | "matchers" | "fingerprint";
 /** A 32-byte subkey for one purpose: HKDF-SHA256 over the key, no salt, `info` "pseudonym/<purpose>". */
 export function subkey(key: Buffer, purpose: Purpose): Buffer {
   return Buffer.from(hkdfSync("sha256", key, Buffer.alloc(0), `pseudonym/${purpose}`, 32));
+}
+
+/** 8 base32 characters of the HKDF-SHA256 "pseudonym/fingerprint" subkey: identifies a key, reveals nothing of it. */
+export function fingerprint(key: Buffer): string {
+  return base32(subkey(key, "fingerprint"), 8);
 }

@@ -31,4 +31,4 @@ Let agents work with data about people without the model ever learning who they 
 
 ## Status
 
-Version 0.x, nothing published: the repository and its decisions; the library comes one feature at a time (see `features/`).
+Version 0.x, not yet published to npm: the key, aliases, directory, redaction and CLI are implemented; new work comes as notes in `features/`, each with its issue.
