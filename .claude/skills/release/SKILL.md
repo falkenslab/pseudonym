@@ -40,7 +40,7 @@ If nothing but `docs`/`chore` changed since the last tag, tell the user a releas
 npm version <patch|minor|major> --no-git-tag-version
 ```
 
-This updates `package.json` and `package-lock.json`. `grep -rn "<old version>" README.md src` in case a version slipped in elsewhere.
+This updates `package.json` and `package-lock.json`. `grep -rn "<old version>" README.md src` in case a version slipped in elsewhere. The example's lockfile records the library's version through `file:../..`: refresh it with `(cd examples/classroom-mcp && npm install)` and commit it with the release.
 
 Then snapshot the documentation for this version (the site shows the latest released version by default, and keeps each release's documentation; `main` stays at `/docs/next`):
 
@@ -58,7 +58,7 @@ Draft the release notes in English from the commits since the last tag, grouped 
 ## 4. Commit, tag, push, publish
 
 ```
-git add package.json package-lock.json docs/versioned_docs docs/versioned_sidebars docs/versions.json
+git add package.json package-lock.json examples/classroom-mcp/package-lock.json docs/versioned_docs docs/versioned_sidebars docs/versions.json
 git commit -m "chore(release): vX.Y.Z"   # plus the attribution trailer required by the session
 git tag vX.Y.Z
 git push origin main
