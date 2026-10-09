@@ -15,7 +15,7 @@ person's terminal --pseudonym <command>--> cli.ts -> the same modules
 - `text.ts` — `fold()`: lower case without accents, same length, shared by name search and redaction.
 - `redact.ts` — free text: known names to aliases, then checked patterns to placeholders (ADR-005).
 - `index.ts` — the public API callers use; `errors.ts` — `PseudonymError`, shared by every module.
-- `cli.ts` — the `pseudonym` bin, for the person only.
+- `cli.ts` — the `pseudonym` bin, for the person only; `secret.ts` — the key read from stdin, hidden on a terminal (its keystroke logic is a pure function, tested without a terminal).
 
 ## Folder map
 

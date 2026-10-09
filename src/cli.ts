@@ -5,6 +5,7 @@ import { rename } from "node:fs/promises";
 import { aliasOf, directoryPath, forget, link, peopleIn, prune, whois, type Entry } from "./directory.js";
 import { PseudonymError } from "./errors.js";
 import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "./home.js";
+import { readSecret } from "./secret.js";
 
 const USAGE = `Usage: pseudonym <command>
 
@@ -53,45 +54,10 @@ function option(args: string[], name: string): string | undefined {
   return at === -1 ? undefined : need(args[at + 1], `a value for ${name}`);
 }
 
-/** What the person types or pipes in: hidden on a terminal, so the key never shows on screen. */
-async function readSecret(prompt: string): Promise<string> {
-  const stdin = process.stdin;
-  if (!stdin.isTTY) {
-    let text = "";
-    for await (const chunk of stdin) text += String(chunk);
-    return text;
-  }
-  process.stderr.write(prompt);
-  stdin.setRawMode(true);
-  stdin.setEncoding("utf8");
-  try {
-    return await new Promise<string>((resolve, reject) => {
-      let text = "";
-      const onData = (chunk: string) => {
-        for (const char of chunk) {
-          if (char === "\r" || char === "\n") {
-            stdin.off("data", onData);
-            return resolve(text);
-          }
-          if (char === "\u0003") {
-            stdin.off("data", onData);
-            return reject(new PseudonymError("Cancelled."));
-          }
-          text = char === "\u007f" || char === "\b" ? text.slice(0, -1) : text + char;
-        }
-      };
-      stdin.on("data", onData);
-      stdin.resume();
-    });
-  } finally {
-    stdin.setRawMode(false);
-    stdin.pause();
-    process.stderr.write("\n");
-  }
-}
-
 async function importKey(force: boolean): Promise<number> {
-  const text = (await readSecret("Paste the key (from \"pseudonym key export\"): ")).trim();
+  const typed = await readSecret("Paste the key (from \"pseudonym key export\"): ");
+  if (typed === undefined) throw new PseudonymError("Cancelled: nothing was imported.");
+  const text = typed.trim();
   const key = Buffer.from(text, "base64");
   if (key.length !== KEY_BYTES || key.toString("base64") !== text) {
     throw new PseudonymError(`That isn't a key: "pseudonym key export" prints ${KEY_BYTES} bytes in base64.`);
