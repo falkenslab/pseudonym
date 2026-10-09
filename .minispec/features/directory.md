@@ -1,5 +1,7 @@
 # Directory
 
+Issue: [#2](https://github.com/falkenslab/pseudonym/issues/2)
+
 ## Goal
 
 The local encrypted directory of people met, so aliases survive identifier changes and resolve offline (ADR-003).

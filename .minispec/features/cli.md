@@ -1,5 +1,7 @@
 # CLI
 
+Issue: [#4](https://github.com/falkenslab/pseudonym/issues/4)
+
 ## Goal
 
 The `pseudonym` command for the person in charge: resolve aliases, curate the directory, move the key.

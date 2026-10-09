@@ -1,5 +1,7 @@
 # Key and aliases
 
+Issue: [#1](https://github.com/falkenslab/pseudonym/issues/1)
+
 ## Goal
 
 The shared key and the alias computation: the same person always gets the same alias from the same key (ADR-002, ADR-003).

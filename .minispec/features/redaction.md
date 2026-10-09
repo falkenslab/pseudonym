@@ -1,5 +1,7 @@
 # Redaction
 
+Issue: [#3](https://github.com/falkenslab/pseudonym/issues/3)
+
 ## Goal
 
 `redact(text, { service })`: free text with the directory's known people replaced by their aliases and contact and identity data replaced by placeholders (ADR-005).
