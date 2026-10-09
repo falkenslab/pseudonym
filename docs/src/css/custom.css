@@ -1,24 +1,31 @@
-/* A deep teal: calm, and apart from agent-kit's indigo. */
+/* The logo's palette: graphite brackets and a magenta question mark. Links and buttons use a deeper
+   magenta than the logo's, so text keeps its contrast on white. */
 :root {
-  --ifm-color-primary: #0f766e;
-  --ifm-color-primary-dark: #0e6a63;
-  --ifm-color-primary-darker: #0d645e;
-  --ifm-color-primary-darkest: #0a524d;
-  --ifm-color-primary-light: #118279;
-  --ifm-color-primary-lighter: #12887e;
-  --ifm-color-primary-lightest: #149a8f;
+  --ifm-color-primary: #be185d;
+  --ifm-color-primary-dark: #ab1654;
+  --ifm-color-primary-darker: #a1144f;
+  --ifm-color-primary-darkest: #851141;
+  --ifm-color-primary-light: #d11a66;
+  --ifm-color-primary-lighter: #db1c6b;
+  --ifm-color-primary-lightest: #e53c80;
+  --ifm-font-color-base: #27272a;
+  --ifm-heading-color: #18181b;
   --ifm-code-font-size: 92%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="dark"] {
-  --ifm-color-primary: #2dd4bf;
-  --ifm-color-primary-dark: #22c7b2;
-  --ifm-color-primary-darker: #20bca8;
-  --ifm-color-primary-darkest: #1a9b8a;
-  --ifm-color-primary-light: #45d9c6;
-  --ifm-color-primary-lighter: #51dbca;
-  --ifm-color-primary-lightest: #74e3d5;
+  --ifm-color-primary: #f472b6;
+  --ifm-color-primary-dark: #f15aa8;
+  --ifm-color-primary-darker: #f04ea1;
+  --ifm-color-primary-darkest: #ec2a8c;
+  --ifm-color-primary-light: #f78ac4;
+  --ifm-color-primary-lighter: #f896cb;
+  --ifm-color-primary-lightest: #fababe;
+  --ifm-font-color-base: #e4e4e7;
+  --ifm-heading-color: #f4f4f5;
+  --ifm-background-color: #18181b;
+  --ifm-navbar-background-color: #18181b;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 

@@ -9,7 +9,7 @@ const versions: string[] = existsSync("./versions.json") ? JSON.parse(readFileSy
 
 const config: Config = {
   title: "pseudonym",
-  tagline: "Stable aliases for people, so programs can tell a language model about them without names.",
+  tagline: "A pseudonymization library for AI tools.",
   favicon: "img/favicon.svg",
 
   url: "https://falkenslab.github.io",
@@ -91,7 +91,7 @@ const config: Config = {
     colorMode: { respectPrefersColorScheme: true },
     navbar: {
       title: "pseudonym",
-      logo: { alt: "pseudonym", src: "img/logo.svg" },
+      logo: { alt: "pseudonym", src: "img/logo.svg", srcDark: "img/logo-dark.svg" },
       items: [
         { type: "docSidebar", sidebarId: "guides", position: "left", label: "Guides" },
         { type: "docSidebar", sidebarId: "cli", position: "left", label: "CLI" },

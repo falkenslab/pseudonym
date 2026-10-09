@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="pseudonym">
-  <rect width="64" height="64" rx="14" fill="#0f766e"/>
-  <text x="32" y="41" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" font-weight="700" fill="#ffffff">A-</text>
+  <style>@media (prefers-color-scheme: dark) { .br { stroke: #f4f4f5 } .q { stroke: #f472b6 } .dot { fill: #f472b6 } }</style>
+  <path class="br" d="M17 10H8v44h9M47 10h9v44h-9" fill="none" stroke="#27272a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="q" d="M24.5 24c0-4.5 3.4-7.5 7.7-7.5 4.4 0 7.8 2.9 7.8 7 0 3.4-2 5.2-4.3 6.6-2.1 1.3-3.4 2.4-3.4 4.9v1.3" fill="none" stroke="#db2777" stroke-width="5.2" stroke-linecap="round"/>
+  <circle class="dot" cx="32.3" cy="45" r="3.3" fill="#db2777"/>
 </svg>

@@ -1,12 +1,18 @@
-# pseudonym
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/logo-dark.svg">
+    <img src="docs/static/img/logo.svg" alt="" height="48" align="top">
+  </picture>
+  pseudonym
+</h1>
 
 [![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
 [![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](LICENSE)
-[![docs](https://img.shields.io/badge/docs-falkenslab.github.io%2Fpseudonym-0f766e)](https://falkenslab.github.io/pseudonym/)
+[![docs](https://img.shields.io/badge/docs-falkenslab.github.io%2Fpseudonym-db2777)](https://falkenslab.github.io/pseudonym/)
 
-Stable aliases for people, for programs that send data about them to a language model. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
+A pseudonymization library for AI tools. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
 
 **Documentation: [falkenslab.github.io/pseudonym](https://falkenslab.github.io/pseudonym/)**: guides, the CLI, security and privacy, and the API reference.
 

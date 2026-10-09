@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "@docusaurus/Link";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 import Layout from "@theme/Layout";
 import CodeBlock from "@theme/CodeBlock";
+import ThemedImage from "@theme/ThemedImage";
 import styles from "./index.module.css";
 
 const FEATURES: { title: string; text: string }[] = [
@@ -50,14 +52,18 @@ const { text } = await redact(post.message, { service });`;
 
 export default function Home(): ReactNode {
   return (
-    <Layout title="Stable aliases for people" description="pseudonym: stable aliases for people, for programs that send data about them to a language model">
+    <Layout title="A pseudonymization library for AI tools" description="pseudonym: a pseudonymization library for AI tools. People go to the model as stable aliases, resolvable only on your machine.">
       <header className={styles.hero}>
         <div className="container">
-          <h1 className={styles.title}>pseudonym</h1>
-          <p className={styles.tagline}>
-            Your program tells a language model about people as <code>A-7K3F9Q</code>, never by name. The person running it can
-            always find out who is who, on their own machine.
-          </p>
+          <h1 className={styles.title}>
+            <ThemedImage
+              className={styles.logo}
+              alt=""
+              sources={{ light: useBaseUrl("/img/logo.svg"), dark: useBaseUrl("/img/logo-dark.svg") }}
+            />
+            pseudonym
+          </h1>
+          <p className={styles.tagline}>A pseudonymization library for AI tools.</p>
           <div className={styles.buttons}>
             <Link className="button button--primary button--lg" to="/docs/guides/installation">
               Get started
