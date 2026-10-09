@@ -28,7 +28,7 @@ Then, in this order:
 | Email | `marta.q@mail.example.test` | Its shape |
 | DNI | `48392017V`, `48392017-V` | The check letter (number mod 23) |
 | NIE | `X1234567L` | The check letter, with X, Y, Z as 0, 1, 2 |
-| Spanish IBAN | `ES91 2100 0418 4502 0005 1332` | ISO 13616 mod 97 |
+| Spanish IBAN | `ES91 2100 0418 4502 0005 1332` | [ISO 13616](https://en.wikipedia.org/wiki/International_Bank_Account_Number) mod 97 |
 | Spanish phone | `612 345 678`, `+34 91 568 04 06` | Nine digits once `+34` is dropped |
 
 Each value becomes `[EMAIL_n]`, `[DNI_n]`, `[NIE_n]`, `[IBAN_n]` or `[PHONE_n]`. Within one call, the same value gets the same placeholder even written differently (`612 345 678` and `+34 612345678` are both `[PHONE_1]`), and numbering starts again in the next call: `[EMAIL_1]` in two posts may be two different addresses.

@@ -22,7 +22,7 @@ Normalization is part of every alias: it's fixed, and changing it in a future ve
 
 ## Alias
 
-`A-` plus 6 characters of Crockford's base32 (`0-9` and `A-Z` without `I`, `L`, `O` and `U`, so a person or a model copies it without confusing characters): `A-7K3F9Q`.
+`A-` plus 6 characters of [Crockford's base32](https://www.crockford.com/base32.html) (`0-9` and `A-Z` without `I`, `L`, `O` and `U`, so a person or a model copies it without confusing characters): `A-7K3F9Q`.
 
 In the rare case that two people get the same 6 characters, the second one gets a 7-character alias (`A-7K3F9QX`), which extends the same prefix. Treat aliases as opaque strings; to match their shape in a test, use `/^A-[0-9A-HJKMNP-TV-Z]{6,12}$/`.
 

@@ -2,7 +2,7 @@
 
 ## Never touch the real key
 
-Point `PSEUDONYM_HOME` to a new temporary folder before your tests call the library. Each folder gets its own key and directory:
+Point `PSEUDONYM_HOME` to a new temporary folder before your tests call the library. Each folder gets its own key and directory. With [`node:test`](https://nodejs.org/api/test.html) (any test runner works the same way):
 
 ```ts
 import { mkdtempSync } from "node:fs";

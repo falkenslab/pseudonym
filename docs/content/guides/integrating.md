@@ -1,6 +1,6 @@
 # Integrating it
 
-This guide uses an MCP server as the example, because it's the case the library was written for; the same applies to any program that sends data about people to a model. [The classroom example](../example/classroom-mcp.md) has all of it working.
+This guide uses an MCP server as the example, because it's the case the library was written for ([Model Context Protocol](https://modelcontextprotocol.io)); the same applies to any program that sends data about people to a model. [The classroom example](../example/classroom-mcp.md) has all of it working.
 
 ## 1. Choose the service
 

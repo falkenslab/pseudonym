@@ -3,7 +3,7 @@
 ## Requirements
 
 - Node.js 20 or later.
-- An ES module project (`"type": "module"`, or `.mjs` / `.mts` files): the package is ESM only.
+- An [ES module](https://nodejs.org/api/esm.html) project (`"type": "module"`, or `.mjs` / `.mts` files): the package is ESM only.
 
 It has no runtime dependencies and ships its TypeScript types.
 

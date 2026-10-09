@@ -1,10 +1,10 @@
 # How it works inside
 
-Everything uses `node:crypto` with standard constructions; there are no runtime dependencies and no home-made schemes.
+Everything uses [`node:crypto`](https://nodejs.org/api/crypto.html) with standard constructions; there are no runtime dependencies and no home-made schemes.
 
 ## The key and its subkeys
 
-The key is 32 random bytes (`randomBytes`), created on first use. It's never used directly: one subkey per purpose is derived with **HKDF-SHA256**, no salt, `info` `pseudonym/<purpose>`:
+The key is 32 random bytes (`randomBytes`), created on first use. It's never used directly: one subkey per purpose is derived with **[HKDF-SHA256](https://www.rfc-editor.org/rfc/rfc5869)**, no salt, `info` `pseudonym/<purpose>`:
 
 | Subkey | Used for |
 | --- | --- |
@@ -29,7 +29,7 @@ alias = "A-" + base32(HMAC-SHA256(aliasesKey, JSON.stringify([service, kind, val
 
 - `kind` and `value` are the strongest identifier present and its type (`institutionalId`, `email` or `serviceUserId`), [normalized](../guides/concepts.md#identifiers). The kind is in the input so that an institutional id `7` and a service user id `7` give different aliases.
 - With linking on, the service is left out: `JSON.stringify([kind, value])`.
-- Base32 is Crockford's alphabet (`0123456789ABCDEFGHJKMNPQRSTVWXYZ`), upper case.
+- Base32 is [Crockford's alphabet](https://www.crockford.com/base32.html) (`0123456789ABCDEFGHJKMNPQRSTVWXYZ`), upper case.
 - 6 characters are 30 bits: a collision is unlikely below tens of thousands of people in a service. When the directory already has the alias for someone else, the newcomer gets 7 characters (and so on), which extend the same prefix.
 
 The JSON array makes the input unambiguous: no service and value can be split differently to give the same bytes.
@@ -42,10 +42,10 @@ One file, `directory.enc`:
 "PSEUDONYM-DIRECTORY" | version (1 byte) | nonce (12 bytes) | GCM tag (16 bytes) | ciphertext
 ```
 
-- **AES-256-GCM** under the directory subkey, with a fresh random nonce on every write.
+- **AES-256-GCM** ([NIST SP 800-38D](https://csrc.nist.gov/pubs/sp/800/38/d/final)) under the directory subkey, with a fresh random nonce on every write.
 - The magic string and the version are authenticated as additional data: changing the header fails like changing the body.
 - The plaintext is JSON: one entry per person with their alias, display name, service ids, matchers, linked aliases, and first and last seen dates.
-- **Matchers** are HMAC-SHA256 of `[kind, value]` under the matchers subkey, for the email and the institutional id: they let the directory recognize a person by an identifier without storing it. The display name and the service user ids are stored, inside the encryption, because `whois` and `resolve()` need them.
+- **Matchers** are [HMAC-SHA256](https://www.rfc-editor.org/rfc/rfc2104) of `[kind, value]` under the matchers subkey, for the email and the institutional id: they let the directory recognize a person by an identifier without storing it. The display name and the service user ids are stored, inside the encryption, because `whois` and `resolve()` need them.
 
 A wrong key, a modified file or an unknown version makes every read throw a `PseudonymError` and leaves the file untouched.
 
