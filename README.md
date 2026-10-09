@@ -147,7 +147,7 @@ The library stops data from reaching a model by accident. An agent on the same m
 
 - The `AppData` lines are for Windows (where `~` is `%USERPROFILE%`; `//c/Users/<user>/AppData/Roaming/pseudonym/**` is the explicit form), the `.config` lines for macOS and Linux.
 - On Windows, the `PowerShell` lines are needed too: a `Bash` rule doesn't cover the PowerShell tool, and with Git Bash installed a `Bash` deny rule alone turns the PowerShell tool off for the session.
-- These rules match the command's literal text and the paths Claude Code recognizes. They don't stop a script that opens the key itself, `node path/to/cli.js`, or a `grep -r` run inside the folder. For enforcement at the operating system's level, enable Claude Code's sandbox.
+- These rules match the command's literal text and the paths Claude Code recognizes. They don't stop a path written with variables (`Get-Content $env:APPDATA\pseudonym\key` was not blocked in our tests, while the same path written out was), a script that opens the key itself, `node path/to/cli.js`, or a `grep -r` run inside the folder. For enforcement at the operating system's level, enable Claude Code's sandbox.
 
 See [Claude Code's permissions](https://code.claude.com/docs/en/permissions) for the rule syntax.
 
