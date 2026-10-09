@@ -1,6 +1,6 @@
 {
   "name": "@falkenslab/pseudonym",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stable aliases for people, so tools can tell a language model about them without names, and the person in charge can always resolve them",
   "author": "Falkenslab",
   "license": "MIT",
