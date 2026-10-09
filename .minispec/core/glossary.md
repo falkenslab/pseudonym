@@ -31,3 +31,15 @@ The local encrypted file of people met: alias, display name, service ids, matche
 ## Fingerprint
 
 A short code of the key, to check two machines use the same one.
+
+## Redaction
+
+Free text made safe to send: known people replaced by their aliases, contact and identity data by placeholders (ADR-005).
+
+## Placeholder
+
+What a redacted value becomes, `[EMAIL_1]`, `[DNI_2]`: numbered within one call, the same value the same placeholder; never resolvable, unlike an alias.
+
+## Consumer
+
+A program that uses the library to send data about people to a model (`moodle-mcp` first).

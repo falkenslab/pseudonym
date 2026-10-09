@@ -8,6 +8,7 @@ The local encrypted directory of people met, so aliases survive identifier chang
 
 - Needs `key-and-aliases.md`.
 - `aliasFor()` alone recomputes; it can't keep a first alias, merge two, or say who an alias is.
+- What the first consumer will call (moodle-mcp's `pseudonymous-mode` card): `remember()` for every other person a tool returns, with `service` `moodle@<site host>`, identifiers Moodle's "ID number" field when set, the email, and the Moodle user id as `serviceUserId`, and the full name as `displayName`; `resolve(alias)` when a write tool gets `user: "A-…"` and needs the Moodle user id back; `redact()` for submissions and posts. It bundles the library with esbuild from `file:../pseudonym`, so `dist/` must build from `npm install` (`prepare`) with no runtime dependencies.
 
 ## Changes
 
