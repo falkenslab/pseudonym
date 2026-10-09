@@ -122,20 +122,34 @@ Every error the person can act on (a lost key, an unknown alias, a directory tha
 
 ## Keep agents away from the key
 
-The library stops data from reaching a model by accident. An agent on the same machine that can read the key folder or run the `pseudonym` command could undo it, so tell your users to deny both in their client. In Claude Code, for instance, in `settings.json`:
+The library stops data from reaching a model by accident. An agent on the same machine that can read the key folder or run the `pseudonym` command could undo it, so tell your users to deny both in their client. In Claude Code, for instance, in the user settings (`~/.claude/settings.json`, so they apply in every project):
 
 ```json
 {
   "permissions": {
     "deny": [
-      "Read(~/.config/pseudonym/**)",
       "Read(~/AppData/Roaming/pseudonym/**)",
+      "Edit(~/AppData/Roaming/pseudonym/**)",
+      "Read(~/.config/pseudonym/**)",
+      "Edit(~/.config/pseudonym/**)",
       "Bash(pseudonym *)",
-      "Bash(npx pseudonym *)"
+      "Bash(npx pseudonym *)",
+      "Bash(npx -y pseudonym *)",
+      "Bash(npx @falkenslab/pseudonym *)",
+      "PowerShell(pseudonym *)",
+      "PowerShell(npx pseudonym *)",
+      "PowerShell(npx -y pseudonym *)",
+      "PowerShell(npx @falkenslab/pseudonym *)"
     ]
   }
 }
 ```
+
+- The `AppData` lines are for Windows (where `~` is `%USERPROFILE%`; `//c/Users/<user>/AppData/Roaming/pseudonym/**` is the explicit form), the `.config` lines for macOS and Linux.
+- On Windows, the `PowerShell` lines are needed too: a `Bash` rule doesn't cover the PowerShell tool, and with Git Bash installed a `Bash` deny rule alone turns the PowerShell tool off for the session.
+- These rules match the command's literal text and the paths Claude Code recognizes. They don't stop a script that opens the key itself, `node path/to/cli.js`, or a `grep -r` run inside the folder. For enforcement at the operating system's level, enable Claude Code's sandbox.
+
+See [Claude Code's permissions](https://code.claude.com/docs/en/permissions) for the rule syntax.
 
 ## Where the data lives
 
