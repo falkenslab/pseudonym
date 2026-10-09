@@ -35,6 +35,10 @@ export async function loadKey(): Promise<Buffer> {
   const existing = await readKey();
   if (existing) return existing;
   if (await exists(markerPath())) {
+    // Another process may have installed the key between our read and now: it links the key before it writes
+    // the marker, so with the marker there the key is either there too or really lost.
+    const installed = await readKey();
+    if (installed) return installed;
     throw new PseudonymError(
       `The key in ${homeDir()} is missing, but one was used there before. Restore it with "pseudonym key import" from your backup; a new key would silently change every alias.`,
     );

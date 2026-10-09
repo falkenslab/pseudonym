@@ -63,7 +63,7 @@ describe("home", () => {
 
   it("ends with one key when several processes create it at once", async () => {
     const dir = useTempHome();
-    const runs = await Promise.all(Array.from({ length: 6 }, () => runScript("test/helpers/alias.ts", ["s", "ana@school.test"], dir)));
+    const runs = await Promise.all(Array.from({ length: 10 }, () => runScript("test/helpers/alias.ts", ["s", "ana@school.test"], dir)));
     for (const run of runs) assert.equal(run.stderr, "");
     assert.equal(new Set(runs.map((run) => run.stdout)).size, 1);
   });
