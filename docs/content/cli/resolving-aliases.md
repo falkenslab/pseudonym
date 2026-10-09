@@ -37,6 +37,8 @@ To cross aliases with something else (a gradebook export, a list the model produ
 pseudonym aliases --service moodle@campus.example.org > people.csv
 ```
 
+Without `--service`, it uses the [default service](overview.md#the-default-service).
+
 ```text
 alias,name
 A-7K3F9Q,Ana Pérez

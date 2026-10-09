@@ -59,6 +59,8 @@ For the person in charge, never for an agent:
 ```sh
 pseudonym whois A-7K3F9Q                  # who an alias is
 pseudonym alias "ana perez"               # someone's aliases
+pseudonym redact < post.txt               # a text safe to paste into a chat
+pseudonym reveal < answer.txt             # the model's answer, with names
 pseudonym key export > pseudonym-key.txt  # back up the key, once
 ```
 

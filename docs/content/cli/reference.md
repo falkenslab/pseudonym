@@ -4,7 +4,10 @@
 | --- | --- | --- |
 | `pseudonym whois <alias>` | Who an alias is: name, alias and linked ones, services, first and last seen | `0`, `2` unknown alias |
 | `pseudonym alias "<name>"` | Everyone whose name contains it (case and accent insensitive), with their aliases and services | `0`, `2` nobody |
-| `pseudonym aliases --service <service>` | A service's people as CSV (`alias,name`) on stdout, a warning on stderr | `0` |
+| `pseudonym aliases [--service <service>]` | A service's people as CSV (`alias,name`) on stdout, a warning on stderr | `0` |
+| `pseudonym services [--json]` | The services in the directory and how many people each has | `0` |
+| `pseudonym redact [--service <service>] [file]` | The text (file or stdin) with the service's people as aliases and contact data as placeholders; counts on stderr | `0`, `1` several services and none chosen, unreadable file |
+| `pseudonym reveal [--with-alias] [file]` | The text (file or stdin) with every known alias replaced by the person's name | `0`, `1` unreadable file |
 | `pseudonym link <alias> <alias>` | The same person: keep the first alias, the second resolves to it | `0`, `2` unknown alias |
 | `pseudonym forget <alias>` | Remove a person from the directory | `0`, `2` unknown alias |
 | `pseudonym prune --older-than <n>(d\|m\|y)` | Remove people not seen for that long | `0`, `1` bad age |
@@ -21,6 +24,7 @@ All commands exit with `1` on an error, with a message on stderr that says what 
 | Variable | Effect |
 | --- | --- |
 | `PSEUDONYM_HOME` | The folder for the key and the directory, instead of `%APPDATA%\pseudonym\` or `~/.config/pseudonym/` |
+| `PSEUDONYM_SERVICE` | The service for commands that take one when `--service` isn't given, instead of `default` |
 
 ## Files in the folder
 

@@ -273,6 +273,38 @@ export async function peopleIn(service: string): Promise<Entry[]> {
   return (await snapshot()).data.entries.filter((entry) => hasService(entry, service));
 }
 
+/** Every service in the directory with how many people it has, most people first. */
+export async function services(): Promise<{ service: string; people: number }[]> {
+  const counts = new Map<string, number>();
+  for (const entry of (await snapshot()).data.entries) {
+    for (const { service } of entry.services) counts.set(service, (counts.get(service) ?? 0) + 1);
+  }
+  return [...counts].map(([service, people]) => ({ service, people })).sort((a, b) => b.people - a.people || a.service.localeCompare(b.service));
+}
+
+// An alias as it may appear in a model's text: any case, as a whole word (not inside another code).
+const ALIAS_IN_TEXT = /(?<![\p{L}\p{N}-])A-[0-9A-HJKMNP-TV-Z]{6,12}(?![\p{L}\p{N}])/giu;
+
+/**
+ * `text` with every alias the directory knows (linked ones included) replaced by the person's display name,
+ * or "Name (A-…)" with `withAlias`. For the person in charge only: the result holds names in clear.
+ */
+export async function reveal(text: string, withAlias = false): Promise<{ text: string; revealed: number; unknown: number }> {
+  const { data } = await snapshot();
+  let revealed = 0;
+  let unknown = 0;
+  const result = text.replace(ALIAS_IN_TEXT, (alias) => {
+    const entry = find(data, alias);
+    if (!entry) {
+      unknown++;
+      return alias;
+    }
+    revealed++;
+    return withAlias ? `${entry.displayName} (${alias.toUpperCase()})` : entry.displayName;
+  });
+  return { text: result, revealed, unknown };
+}
+
 /** Marks `b` as the same person as `a`: `a` is kept, `b` resolves to it from now on. Returns `a`'s alias. */
 export async function link(a: string, b: string): Promise<string> {
   return update((data) => {

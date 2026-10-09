@@ -40,9 +40,14 @@ export PSEUDONYM_HOME=/path/to/that/folder        # sh
 ## What you can do
 
 - [Resolve aliases](resolving-aliases.md): who is `A-7K3F9Q`, and what are Lucía's aliases.
+- [Redact and reveal text](redacting-and-revealing.md): make a text safe to paste into a chat, and read the answer with names.
 - [Tidy the directory](tidying-the-directory.md): link two aliases of the same person, forget someone, remove people not seen for a while.
 - [Back up and move the key](the-key.md): once, the first day.
 - [Command reference](reference.md): every command, its output and exit codes.
+
+## The default service
+
+Commands that take a service use `--service`, else the `PSEUDONYM_SERVICE` environment variable, else `default`. `pseudonym services` lists the services the directory knows. See [Which service it uses](redacting-and-revealing.md#which-service-it-uses).
 
 ## Output and exit codes
 

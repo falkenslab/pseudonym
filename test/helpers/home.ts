@@ -16,11 +16,15 @@ export interface Result {
   stderr: string;
 }
 
-/** Runs a TypeScript file from the repo root in its own process, with PSEUDONYM_HOME set to `home`. */
-export function runScript(file: string, args: string[], home: string, input?: string): Promise<Result> {
+/**
+ * Runs a TypeScript file from the repo root in its own process, with PSEUDONYM_HOME set to `home` and only the
+ * other PSEUDONYM_* variables in `env`: the person running the tests may have their own set.
+ */
+export function runScript(file: string, args: string[], home: string, input?: string, env: Record<string, string> = {}): Promise<Result> {
+  const inherited = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("PSEUDONYM_")));
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ["--import", "tsx", file, ...args], {
-      env: { ...process.env, PSEUDONYM_HOME: home },
+      env: { ...inherited, ...env, PSEUDONYM_HOME: home },
     });
     let stdout = "";
     let stderr = "";

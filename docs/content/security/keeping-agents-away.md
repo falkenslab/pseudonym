@@ -2,6 +2,8 @@
 
 The library keeps people's data from reaching a model by accident. But an agent running on the same machine (Claude Code, say, helping the teacher who runs the MCP server) could read the key folder or run `pseudonym whois`, and undo it. The library can't prevent that from inside: the client running the agent has to.
 
+The same goes for what the CLI prints for the person: `whois`, `alias`, `aliases` and `reveal` output names in clear. Read them yourself; never paste them back into a chat with a model, and don't leave them in files where an agent can read them.
+
 ## Claude Code's deny rules
 
 In the user settings (`~/.claude/settings.json`), so they apply in every project:
