@@ -1,0 +1,13 @@
+node_modules/
+dist/
+# Keys and directories (never inside the repo, but just in case)
+*.key
+directory.enc
+# Environment
+.env
+.env.*
+!.env.example
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
