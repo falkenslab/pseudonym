@@ -6,6 +6,7 @@ import { loadKey, subkey } from "./home.js";
 export { PseudonymError } from "./errors.js";
 export type { Identifiers } from "./aliases.js";
 export { remember, resolve, type Person } from "./directory.js";
+export { redact, type Redacted } from "./redact.js";
 
 /**
  * A short code of the key (8 base32 characters of its HKDF-SHA256 "pseudonym/fingerprint" subkey), to check

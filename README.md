@@ -94,7 +94,7 @@ redact(text: string, options: { service: string }): Promise<{
 
 For text people wrote (submissions, forum posts, messages):
 
-- the full names of the directory's people in that service become their aliases (case and accent insensitive, whole words);
+- the full names of the directory's people in that service become their aliases (case and accent insensitive, whole words), unless two people in the service share it;
 - a first name alone becomes the alias only when exactly one person in the service has it and it's capitalized in the text;
 - emails, Spanish phone numbers, DNI, NIE and Spanish IBANs (validated with their check digits) become placeholders, `[EMAIL_1]`, `[PHONE_1]`, `[DNI_1]`, `[IBAN_1]`, numbered within the call.
 
