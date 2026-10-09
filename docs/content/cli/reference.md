@@ -8,6 +8,9 @@
 | `pseudonym services [--json]` | The services in the directory and how many people each has | `0` |
 | `pseudonym redact [--service <service>] [file]` | The text (file or stdin) with the service's people as aliases and contact data as placeholders; counts on stderr | `0`, `1` several services and none chosen, unreadable file |
 | `pseudonym reveal [--with-alias] [file]` | The text (file or stdin) with every known alias replaced by the person's name | `0`, `1` unreadable file |
+| `pseudonym remember --name <name> [--email …] [--institutional-id …] [--service-user-id …]` | A person's alias (also `--service`, `--link`, `--json`) | `0`, `1` no name or no identifier |
+| `pseudonym remember --csv <file> [--only-aliases]` | Aliases for a whole CSV, as a CSV with an `alias` column first (`--only-aliases` drops names and identifiers); also `--json` | `0`, `1` a row without name or identifier |
+| `pseudonym resolve <alias> [--service <service>]` | The service user id behind an alias (also `--json`) | `0`, `2` unknown alias or no id in that service |
 | `pseudonym link <alias> <alias>` | The same person: keep the first alias, the second resolves to it | `0`, `2` unknown alias |
 | `pseudonym forget <alias>` | Remove a person from the directory | `0`, `2` unknown alias |
 | `pseudonym prune --older-than <n>(d\|m\|y)` | Remove people not seen for that long | `0`, `1` bad age |

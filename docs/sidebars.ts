@@ -20,7 +20,7 @@ const sidebars: SidebarsConfig = {
       items: ["example/classroom-mcp"],
     },
   ],
-  cli: ["cli/overview", "cli/resolving-aliases", "cli/redacting-and-revealing", "cli/tidying-the-directory", "cli/the-key", "cli/reference"],
+  cli: ["cli/overview", "cli/resolving-aliases", "cli/redacting-and-revealing", "cli/without-code", "cli/tidying-the-directory", "cli/the-key", "cli/reference"],
   security: ["security/threat-model", "security/gdpr", "security/keeping-agents-away", "security/how-it-works"],
   api: [{ type: "doc", id: "api/index", label: "Overview" }, ...apiSidebar],
 };

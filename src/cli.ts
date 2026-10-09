@@ -3,11 +3,12 @@
 // Never something an agent should be allowed to run (see the README's client permissions).
 import { readFile, rename } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { aliasOf, directoryPath, forget, link, peopleIn, prune, reveal, services as listServices, whois, type Entry } from "./directory.js";
+import { aliasOf, directoryPath, forget, link, peopleIn, prune, remember, reveal, services as listServices, whois, type Entry, type Person } from "./directory.js";
 import { PseudonymError } from "./errors.js";
 import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "./home.js";
 import { redact } from "./redact.js";
 import { readSecret } from "./secret.js";
+import { csvField, csvLine, parseCsv } from "./csv.js";
 
 const USAGE = `Usage: pseudonym <command>
 
@@ -18,6 +19,11 @@ Commands:
   services [--json]                  the services in the directory, and how many people each has
   redact [--service <service>] [file]    a text (file or stdin) with people as aliases and contact data as placeholders
   reveal [--with-alias] [file]       a text (file or stdin) with every known alias replaced by the person's name
+  remember --name <name> [--email <email>] [--institutional-id <id>] [--service-user-id <id>]
+                                     a person's alias (also --service, --link, --json)
+  remember --csv <file> [--only-aliases]
+                                     aliases for a whole CSV (name, email, institutional_id, service_user_id)
+  resolve <alias> [--service <service>]  the service's id behind an alias (also --json)
   link <alias> <alias>               the same person: keep the first alias, the second resolves to it
   forget <alias>                     remove a person from the directory
   prune --older-than <n>(d|m|y)      remove people not seen for that long
@@ -43,8 +49,6 @@ function need(value: string | undefined, what: string): string {
 }
 
 const services = (entry: Entry) => entry.services.map((s) => s.service).join(", ");
-
-const csv = (value: string) => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
 
 function parseAge(age: string): Date {
   const match = /^(\d+)([dmy])$/.exec(age);
@@ -149,6 +153,90 @@ async function revealCommand(args: string[]): Promise<number> {
   const unknown = result.unknown ? `; ${plural(result.unknown, "unknown alias", "unknown aliases")} left as is` : "";
   warn(`Revealed ${plural(result.revealed, "alias", "aliases")}${unknown}.`);
   if (result.revealed) warn("The output holds names in clear: never paste it back to a model, nor where an agent can read it.");
+  return OK;
+}
+
+// CSV columns the library reads, by their header with case, spaces, hyphens and underscores ignored.
+const PERSON_COLUMNS = { name: "name", email: "email", institutionalid: "institutionalId", serviceuserid: "serviceUserId" } as const;
+const columnKey = (header: string) => header.toLowerCase().replace(/[\s_-]+/g, "");
+
+/** The people of a CSV, with every row checked before anything is remembered. Errors name lines, never content. */
+function peopleFromCsv(text: string, service: string, link: boolean | undefined) {
+  const [head, ...rows] = parseCsv(text);
+  if (!head) throw new PseudonymError("The CSV is empty: it needs a header line with at least a name column.");
+  const role = head.fields.map((header) => PERSON_COLUMNS[columnKey(header) as keyof typeof PERSON_COLUMNS]);
+  if (!role.includes("name")) throw new PseudonymError(`The CSV has no "name" column in its header (line ${head.line}).`);
+  const people: Person[] = rows.map(({ line, fields }) => {
+    const value = (wanted: string) => fields[role.indexOf(wanted as (typeof role)[number])]?.trim() || undefined;
+    const identifiers = { email: value("email"), institutionalId: value("institutionalId"), serviceUserId: value("serviceUserId") };
+    if (!value("name")) throw new PseudonymError(`Line ${line} has no name: nothing was remembered.`);
+    if (!identifiers.email && !identifiers.institutionalId && !identifiers.serviceUserId) {
+      throw new PseudonymError(`Line ${line} has no email, institutional_id or service_user_id: nothing was remembered.`);
+    }
+    return { service, identifiers, displayName: value("name")!, link };
+  });
+  return { head: head.fields, role, rows: rows.map((r) => r.fields), people };
+}
+
+async function rememberCommand(args: string[]): Promise<number> {
+  const { values, positionals } = parse(
+    args,
+    {
+      name: { type: "string" },
+      email: { type: "string" },
+      "institutional-id": { type: "string" },
+      "service-user-id": { type: "string" },
+      service: { type: "string" },
+      link: { type: "boolean" },
+      csv: { type: "string" },
+      "only-aliases": { type: "boolean" },
+      json: { type: "boolean" },
+    },
+    "remember",
+  );
+  if (positionals.length) throw new PseudonymError('"remember" takes its data as options: --name, --email… or --csv <file>. Run "pseudonym help".');
+  const service = serviceOrDefault(values.service);
+  const link = values.link ? true : undefined;
+
+  if (values.csv === undefined) {
+    const displayName = need(values.name, "--name (or --csv <file>)");
+    const alias = await remember({
+      service,
+      identifiers: { email: values.email, institutionalId: values["institutional-id"], serviceUserId: values["service-user-id"] },
+      displayName,
+      link,
+    });
+    out(values.json ? JSON.stringify({ alias }) : alias);
+    return OK;
+  }
+
+  const { head, role, rows, people } = peopleFromCsv(await readInput(values.csv), service, link);
+  const aliases = people.length ? await remember(people) : [];
+  // Without --only-aliases every column is kept; with it, the ones that identify someone are dropped.
+  const kept = head.map((_, i) => i).filter((i) => !values["only-aliases"] || role[i] === undefined);
+  if (values.json) {
+    out(JSON.stringify(rows.map((fields, r) => Object.fromEntries([["alias", aliases[r]], ...kept.map((i) => [head[i], fields[i] ?? ""])]))));
+  } else {
+    out(csvLine(["alias", ...kept.map((i) => head[i]!)]));
+    rows.forEach((fields, r) => out(csvLine([aliases[r]!, ...kept.map((i) => fields[i] ?? "")])));
+  }
+  warn(`Remembered ${plural(people.length, "person", "people")} in ${service}.`);
+  if (!values["only-aliases"]) warn("The output still holds names and identifiers: use --only-aliases for something a model may read.");
+  return OK;
+}
+
+async function resolveCommand(args: string[]): Promise<number> {
+  const { values, positionals } = parse(args, { service: { type: "string" }, json: { type: "boolean" } }, "resolve");
+  const alias = need(positionals[0], "an alias").trim().toUpperCase();
+  const service = serviceOrDefault(values.service);
+  // What resolve() does, with "not found" told apart from real errors (a key or directory problem).
+  const entry = await whois(alias);
+  const id = entry?.services.find((s) => s.service === service)?.id;
+  if (!entry || id === undefined) {
+    warn(entry ? `${entry.alias} has no user id in ${service}.` : `Nobody in the directory has the alias ${alias}.`);
+    return NOT_FOUND;
+  }
+  out(values.json ? JSON.stringify({ alias: entry.alias, service, id }) : id);
   return OK;
 }
 
@@ -267,11 +355,15 @@ export async function run(args: string[]): Promise<number> {
       return redactCommand(rest);
     case "reveal":
       return revealCommand(rest);
+    case "remember":
+      return rememberCommand(rest);
+    case "resolve":
+      return resolveCommand(rest);
     case "aliases": {
       const people = await peopleIn(serviceOrDefault(option(rest, "--service")));
       warn("This list holds names in clear: keep it away from agents, and delete it when done.");
       out("alias,name");
-      for (const entry of people) out(`${entry.alias},${csv(entry.displayName)}`);
+      for (const entry of people) out(`${entry.alias},${csvField(entry.displayName)}`);
       return OK;
     }
     case "link": {
