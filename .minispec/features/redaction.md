@@ -7,7 +7,7 @@
 ## Context
 
 - Needs `directory.md` (known names and their aliases for a service).
-- The spike's patterns and texts come from the `moodle-mcp` session: the texts are in `test/fixtures/spanish-texts.mjs` (`buildDataset()`: 48 texts, each with its expected entities by kind); the patterns below found every expected email, phone, DNI, NIE and IBAN, with one false positive.
+- The spike's patterns and texts come from the `moodle-mcp` session: the texts are in `test/fixtures/spanish-texts.mjs` (`buildDataset()`: 48 texts, each with its expected entities by kind); the patterns below found every expected email, phone, DNI, NIE and IBAN, with one false positive. Call `buildDataset()` once per process: its seed advances with every call.
 
 ## Changes
 
