@@ -21,6 +21,7 @@ The local encrypted directory of people met, so aliases survive identifier chang
   - A match returns the entry's alias, updating name, service ids and last seen; else a new entry gets `aliasFor()`'s alias, lengthened by one character on a collision.
   - When the identifiers match different entries, the strongest identifier wins (institutional id, then email, then service user id, as in ADR-002), the entries are never merged, and `process.emitWarning` names both aliases, never the identifiers.
 - `resolve(alias, { service })` for callers that take an alias back (a write tool): follows links, and gives the entry's service id for that service, or a `PseudonymError`.
+- Every public function that touches the folder (`remember`, `resolve`, `redact`, `keyFingerprint`) returns a promise: file I/O and the lock wait are asynchronous.
 - `whois`, `aliasOf(name)` (case and accent insensitive, as `redact()`), `link(a, b)` (keeps `a`, `b` resolves to it), `forget(alias)`, `prune(olderThan)`.
 - Tests: a changed email keeps the alias; the same email in two services gives two aliases unless linked; the institutional id wins a conflict with the email; links; forget then meet again gives the recomputed alias; 300 people in one call make one write; concurrent `remember` from two processes loses nothing; a leftover temporary file doesn't hide the real one; the file has no name, email or id in clear; a tampered file fails closed.
 
