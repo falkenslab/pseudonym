@@ -4,6 +4,14 @@
   "description": "Stable aliases for people, so tools can tell a language model about them without names, and the person in charge can always resolve them",
   "author": "Falkenslab",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falkenslab/pseudonym.git"
+  },
+  "homepage": "https://github.com/falkenslab/pseudonym#readme",
+  "bugs": {
+    "url": "https://github.com/falkenslab/pseudonym/issues"
+  },
   "keywords": [
     "pseudonymization",
     "privacy",
