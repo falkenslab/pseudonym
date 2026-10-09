@@ -20,4 +20,5 @@ person's terminal --pseudonym <command>--> cli.ts -> the same modules
 ## Folder map
 
 - `src/` — the library and the CLI.
+- `examples/classroom-mcp/` — an MCP server using the library from `file:../..`, with its own `package.json` (the MCP SDK stays out of the library's dependencies), a demo and a smoke test run by `verify`.
 - `test/` — tests mirroring `src/`; `test/fixtures/spanish-texts.ts`, the redaction spike's texts with their expected entities.

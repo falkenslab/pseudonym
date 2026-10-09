@@ -12,9 +12,12 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+(cd examples/classroom-mcp && npm install && npm run typecheck && npm test)
 ```
 
 Notes:
+
+- The example (`examples/classroom-mcp`) uses the library from `file:../..`, so it sees the build just made: run it after `npm run build`. Its tests must report `fail 0` too, and no tool output may carry a personal value. npm's warning about the library's `prepare` script not being in `allowScripts` is expected (npm can't approve a local dependency).
 
 - `npm test` must report `fail 0`. Quote the pass/fail counts in your report.
 - `dist/` is gitignored and `tsc` never deletes stale output. If files were moved or removed under `src/`, run `rm -rf dist` before `npm run build`, otherwise orphaned `.js`/`.d.ts` files linger and hide broken imports.

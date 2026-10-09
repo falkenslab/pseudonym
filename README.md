@@ -55,6 +55,8 @@ const userId = await resolve("A-7K3F9Q", { service });
 const { text } = await redact(post.message, { service });
 ```
 
+For a complete, runnable server (four tools over a made-up course, a demo and a test), see [examples/classroom-mcp](examples/classroom-mcp).
+
 ## Concepts
 
 - **Service.** A string naming where you met the person, such as `moodle@<site host>` or `mail@<domain>`. You choose it; keep it stable, since it's part of every alias.
