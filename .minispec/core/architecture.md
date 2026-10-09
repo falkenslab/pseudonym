@@ -1,19 +1,23 @@
 # Architecture
 
-> High-level overview only. No UML. Keep it ≤ 100 lines. Delete these hints.
-
 ## Flow
 
 ```
-<layer> → <layer> → <layer> → <persistence>
+caller (an MCP server) --aliasFor / resolve--> index.ts -> aliases.ts (HMAC) + directory.ts (encrypted file) -> home.ts (key, marker, lock)
+person's terminal --pseudonym <command>--> cli.ts -> the same modules
 ```
 
 ## Key pieces
 
-- <component> — <one-line role>
-- <component> — <one-line role>
+- `home.ts` — the shared folder (`%APPDATA%\pseudonym\`, `~/.config/pseudonym/`, or `PSEUDONYM_HOME`): the key, its subkeys (HKDF), the marker that a key existed, the file lock.
+- `aliases.ts` — identifiers normalized and turned into aliases (ADR-002).
+- `directory.ts` — the encrypted directory: entries, matching by any identifier, first alias kept, links, forget and prune (ADR-003).
+- `index.ts` — the public API callers use.
+- `cli.ts` — the `pseudonym` bin, for the person only.
 
 ## Folder map
 
-- `<dir>/` — <what lives here>
-- `<dir>/` — <what lives here>
+- `src/` — the library and the CLI.
+- `test/` — tests mirroring `src/`.
+
+Nothing is built yet: the modules come with the features in `features/`.
