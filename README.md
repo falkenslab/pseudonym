@@ -1,8 +1,13 @@
 # pseudonym
 
+[![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
+[![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
+[![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
+[![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](LICENSE)
+
 Stable aliases for people, for programs that send data about them to a language model. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
 
-> **Status: 0.x, not yet published to npm.** The API below is implemented and tested; names and signatures may still change before `1.0`.
+> **Status: 0.x.** The API below is implemented, tested and [published on npm](https://www.npmjs.com/package/@falkenslab/pseudonym); names and signatures may still change before `1.0`.
 
 ## When to use it
 
@@ -18,9 +23,16 @@ It runs inside your program: there is no server to deploy and nothing an agent c
 
 Requires Node.js 20 or later. ESM only, with TypeScript types, and no runtime dependencies.
 
+In your program:
+
 ```sh
-npm install @falkenslab/pseudonym        # once published
-npm install github:falkenslab/pseudonym  # until then (builds on install)
+npm install @falkenslab/pseudonym
+```
+
+For the people who run your program, the `pseudonym` command (see [the CLI](#the-cli-for-your-users)):
+
+```sh
+npm install --global @falkenslab/pseudonym
 ```
 
 ## Quick start
@@ -177,21 +189,76 @@ Each folder gets its own key, so aliases differ between test runs: assert on the
 
 ## The CLI, for your users
 
-The person running your program has the `pseudonym` command:
+The person running your program resolves aliases and looks after the key with the `pseudonym` command. Point them here from your own README. It's for the person only: never let an agent run it (see [above](#keep-agents-away-from-the-key)).
+
+### Install
+
+```sh
+npm install --global @falkenslab/pseudonym
+pseudonym help
+```
+
+Without installing it, `npx @falkenslab/pseudonym <command>` runs the same command. It reads the same folder as every program on the machine that uses the library (or `PSEUDONYM_HOME`, if set).
+
+### Find out who an alias is
+
+```sh
+$ pseudonym whois A-7K3F9Q
+Ana Pérez
+  alias A-7K3F9Q
+  services moodle@campus.example.org
+  first seen 2026-10-09T18:02:11.000Z, last seen 2026-10-09T19:40:05.000Z
+
+$ pseudonym alias "ana perez"          # case and accents don't matter
+A-7K3F9Q  Ana Pérez  (moodle@campus.example.org)
+```
+
+To work with a whole service at once, `pseudonym aliases --service moodle@campus.example.org > people.csv` writes its people as CSV (`alias,name`). The file holds names in clear: delete it when done.
+
+### Keep the directory tidy
+
+```sh
+pseudonym link A-7K3F9Q A-M2X8RD          # the same person: A-M2X8RD now resolves to A-7K3F9Q
+pseudonym forget A-7K3F9Q                 # remove a person (an erasure request)
+pseudonym prune --older-than 2y           # remove everyone not seen for 2 years (d, m or y)
+```
+
+A person forgotten and met again gets the same alias back; only the offline lookup was lost.
+
+### Back up and move the key
+
+The key is created the first time a program uses the library. Losing it loses every way back, so back it up once:
+
+```sh
+pseudonym key fingerprint                 # a short code, e.g. CJ76RG29, to compare machines
+pseudonym key export > pseudonym-key.txt  # then keep the file somewhere safe (a password manager)
+```
+
+On another machine, or to restore it, the key is read from stdin, never from the command line (where it would stay in the shell's history):
+
+```sh
+pseudonym key import < pseudonym-key.txt
+pseudonym key import                      # or paste it when asked: nothing is shown on screen
+```
+
+`key import` refuses to replace a different key. `key import --force` replaces it, after moving the current directory aside to a `.bak` file that only the old key opens.
+
+### Commands
 
 | Command | What it does |
 | --- | --- |
 | `pseudonym whois <alias>` | Who an alias is |
-| `pseudonym alias "<name>"` | The aliases of a person, with their services |
+| `pseudonym alias "<name>"` | The aliases of people with that name, with their services |
 | `pseudonym aliases --service <s>` | A service's people as CSV on stdout |
 | `pseudonym link <alias> <alias>` | Mark two aliases as the same person, keeping the first |
 | `pseudonym forget <alias>` | Remove a person from the directory |
 | `pseudonym prune --older-than <n>(d\|m\|y)` | Remove people not seen for that long |
 | `pseudonym key fingerprint` | Show the key's fingerprint |
 | `pseudonym key export` | Print the key, to back it up or move it |
-| `pseudonym key import` | Read a key from stdin |
+| `pseudonym key import [--force]` | Read a key from stdin |
+| `pseudonym help` | List the commands |
 
-It's for the person only: never let an agent run it.
+Exit codes: `0` done, `1` error (with a message on stderr saying what to do), `2` not found (an unknown alias or name, or no key yet).
 
 ## Contributing
 
