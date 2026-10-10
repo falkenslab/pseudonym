@@ -1,7 +1,7 @@
 <h1>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/static/img/logo-dark.svg">
-    <img src="docs/static/img/logo.svg" alt="" height="48" align="top">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo.svg" alt="" height="48" align="top">
   </picture>
   pseudonym
 </h1>
@@ -9,7 +9,7 @@
 [![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
-[![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](LICENSE)
+[![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](https://github.com/falkenslab/pseudonym/blob/main/LICENSE)
 [![docs](https://img.shields.io/badge/docs-falkenslab.github.io%2Fpseudonym-db2777)](https://falkenslab.github.io/pseudonym/)
 
 A pseudonymization library for AI tools. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
@@ -50,7 +50,7 @@ const { text } = await redact(post.message, { service });
 - A local encrypted directory keeps each person's first alias and lets the person in charge resolve it offline.
 - Aliases are per service by default, so a model can't join what it learns about someone in different services.
 
-[Integrating it](https://falkenslab.github.io/pseudonym/docs/guides/integrating) walks through it step by step, and [examples/classroom-mcp](examples/classroom-mcp) is a complete MCP server that uses it.
+[Integrating it](https://falkenslab.github.io/pseudonym/docs/guides/integrating) walks through it step by step, and [examples/classroom-mcp](https://github.com/falkenslab/pseudonym/tree/main/examples/classroom-mcp) is a complete MCP server that uses it.
 
 ## The CLI
 
