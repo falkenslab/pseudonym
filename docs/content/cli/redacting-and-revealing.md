@@ -16,9 +16,18 @@ pseudonym: Using the only service in the directory: moodle@campus.example.org.
 pseudonym: Replaced 1 name, 1 email, 1 phone.
 ```
 
-- It reads the file you give it, or stdin when there is none (or it's `-`), and prints the text to stdout, changed only where something was replaced: line endings and the final newline stay as they were.
+- It reads the file you give it, or stdin when there is none (or it's `-`), and prints the text to stdout, changed only where something was replaced: line endings and the final newline stay as they were (see [accents and encodings](#accents-and-encodings) for text that isn't UTF-8).
 - What it replaces is exactly what [`redact()`](../guides/redaction.md) does: the directory's people of that service become their aliases, and emails, payment cards, IBANs and the ids and phones of the countries asked for become placeholders. `--countries US,CA` chooses the countries (Spain by default; see [the table](../guides/redaction.md#by-country)). The counts go to stderr, so `> safe.txt` gets only the text.
 - It only knows the names of people the directory has met. Someone your programs never remembered stays as they are: read the result before pasting it.
+
+### Accents and encodings
+
+The output is always UTF-8. The input should be too, and usually is; when it isn't, the command says so on stderr and reads it the way Windows wrote it:
+
+- text piped from `cmd` (`echo … | pseudonym redact`) is in the console's code page, 850 in Spain or 437 in the US: it's read in that code page;
+- a file saved as "ANSI" by an older editor is Windows-1252: it's read as that.
+
+So accented letters (`librería`, `Ñ`) come out right either way. A UTF-8 file's byte order mark, if it has one, is dropped.
 
 ## Which service it uses
 

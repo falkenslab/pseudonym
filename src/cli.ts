@@ -10,6 +10,7 @@ import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "
 import { checkCountries, redact, type Country } from "./redact.js";
 import { readSecret } from "./secret.js";
 import { csvField, csvLine, parseCsv } from "./csv.js";
+import { consoleCodePage, decodeText } from "./encoding.js";
 
 const USAGE = `Usage: pseudonym <command>
 
@@ -115,16 +116,24 @@ async function serviceForRedact(flag: string | undefined): Promise<string> {
 
 /** The text to work on: the file given, or stdin when there is none or it's "-". */
 async function readInput(file: string | undefined): Promise<string> {
+  let bytes: Buffer;
+  let fromStdin = false;
   if (file && file !== "-") {
     try {
-      return await readFile(file, "utf8");
+      bytes = await readFile(file);
     } catch (error) {
       throw new PseudonymError(`Can't read ${file}: ${isCode(error, "ENOENT") ? "no such file" : (error as NodeJS.ErrnoException).code ?? "unreadable"}.`);
     }
+  } else {
+    if (process.stdin.isTTY) warn("Reading the text from the terminal: end it with Ctrl+D (Ctrl+Z then Enter on Windows).");
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) chunks.push(Buffer.from(chunk as Buffer));
+    bytes = Buffer.concat(chunks);
+    fromStdin = true;
   }
-  if (process.stdin.isTTY) warn("Reading the text from the terminal: end it with Ctrl+D (Ctrl+Z then Enter on Windows).");
-  let text = "";
-  for await (const chunk of process.stdin) text += String(chunk);
+  // Not UTF-8: on Windows, piped text is in the console's code page (cmd's echo), and files are "ANSI".
+  const { text, encoding } = decodeText(bytes, () => (fromStdin ? consoleCodePage() : undefined));
+  if (encoding !== "utf-8") warn(`The input isn't UTF-8: read it as ${encoding}. The output is UTF-8.`);
   return text;
 }
 
