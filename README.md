@@ -9,7 +9,7 @@
 [![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
 [![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
-[![license](https://img.shields.io/npm/l/@falkenslab/pseudonym)](https://github.com/falkenslab/pseudonym/blob/main/LICENSE)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/falkenslab/pseudonym/blob/main/LICENSE)
 [![docs](https://img.shields.io/badge/docs-falkenslab.github.io%2Fpseudonym-db2777)](https://falkenslab.github.io/pseudonym/)
 
 A pseudonymization library for AI tools. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
