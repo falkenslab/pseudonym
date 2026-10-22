@@ -1,31 +1,45 @@
-<h1>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo-dark.svg">
-    <img src="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo.svg" alt="" height="48" align="top">
-  </picture>
-  pseudonym
-</h1>
+<div align="center">
 
-[![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
-[![types](https://img.shields.io/npm/types/@falkenslab/pseudonym)](https://www.npmjs.com/package/@falkenslab/pseudonym)
-[![node](https://img.shields.io/node/v/@falkenslab/pseudonym)](https://nodejs.org/)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/falkenslab/pseudonym/blob/main/LICENSE)
-[![docs](https://img.shields.io/badge/docs-falkenslab.github.io%2Fpseudonym-db2777)](https://falkenslab.github.io/pseudonym/)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo-dark.svg">
+  <img src="https://raw.githubusercontent.com/falkenslab/pseudonym/main/docs/static/img/logo.svg" alt="pseudonym logo: a question mark between brackets, a person no one can name" width="112"/>
+</picture>
 
-A pseudonymization library for AI tools. Your program passes each person through the library and sends `A-7K3F9Q` instead of a name, an email or an id; the person running your program resolves the alias on their own machine with `pseudonym whois A-7K3F9Q`.
+# pseudonym
 
-**Documentation: [falkenslab.github.io/pseudonym](https://falkenslab.github.io/pseudonym/)**: guides, the CLI, security and privacy, and the API reference.
+**Let your AI tools talk about people without ever naming them.**<br/>
+Each person becomes a stable alias like `A-7K3F9Q`, and only you can turn it back into a name, on your own machine.
 
-## Install
+[![npm](https://img.shields.io/npm/v/@falkenslab/pseudonym?color=cb3837&logo=npm)](https://www.npmjs.com/package/@falkenslab/pseudonym)
+![Node.js 20+](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)
+![TypeScript types](https://img.shields.io/badge/types-TypeScript-3178c6?logo=typescript&logoColor=white)
+![No runtime dependencies](https://img.shields.io/badge/dependencies-0-0b0b0b)
+[![License: MIT](https://img.shields.io/badge/license-MIT-16a34a)](https://github.com/falkenslab/pseudonym/blob/main/LICENSE)
 
-Node.js 20 or later, ESM only, with TypeScript types and no runtime dependencies.
+**[📖 Documentation](https://falkenslab.github.io/pseudonym/)** · [📖 Documentación en español](https://falkenslab.github.io/pseudonym/es/)
+
+</div>
+
+pseudonym is a pseudonymization library for programs that send data about people to a language model, such as an [MCP](https://modelcontextprotocol.io) server reading a course's submissions. Your program passes each person through it and sends `A-7K3F9Q` instead of "Ana Pérez"; free text loses its known names, emails, cards, IBANs and national ids on the way. The alias is an HMAC under a key that never leaves the machine, and a local encrypted directory lets the person in charge ask `pseudonym whois A-7K3F9Q` whenever they need to.
+
+## ✨ Why pseudonym
+
+- 🕶️ **The model never learns who is who.** It can still tell people apart, refer to them and ask your program to act on them, by alias.
+- 🔑 **Only you can undo it.** Aliases come from a key on your machine; `pseudonym whois` answers offline, and nobody without the key can reverse them.
+- 🧷 **Stable aliases.** The same person always gets the same alias, even after changing their email.
+- 🧱 **One alias per service.** A student is one alias in the LMS and another in the mail, so a model can't join what it learns about them.
+- ✍️ **Free text too.** Names from the directory, emails, payment cards, IBANs and the checked national ids and phones of nine countries become aliases and placeholders.
+- 🧩 **A library, not a server.** It runs inside your program, with no runtime dependencies and no tool an agent could call to undo it.
+- 🧭 **Honest about its limits.** It's pseudonymization, not anonymization: the docs say what it doesn't catch and how to keep an agent away from the key.
+
+## 🚀 Quick start
+
+You need [Node.js](https://nodejs.org) 20 or later and an ES module project.
 
 ```sh
 npm install @falkenslab/pseudonym             # in your program
 npm install --global @falkenslab/pseudonym    # the pseudonym command, for the people who run it
 ```
-
-## Quick start
 
 ```ts
 import { remember, resolve, redact } from "@falkenslab/pseudonym";
@@ -41,51 +55,64 @@ const aliases = await remember(users.map((user) => ({
 
 // A write tool gets an alias back from the model.
 const userId = await resolve("A-7K3F9Q", { service });  // keep it on your side
-
-// Text people wrote: known names, emails, cards, IBANs and the ids and phones of your countries out.
-const { text } = await redact(post.message, { service });
 ```
 
-- The alias is an HMAC of the person's strongest identifier under a key that never leaves the machine: stable, and impossible to undo without the key.
-- A local encrypted directory keeps each person's first alias and lets the person in charge resolve it offline.
-- Aliases are per service by default, so a model can't join what it learns about someone in different services.
+The key is created on first use, in `%APPDATA%\pseudonym\` or `~/.config/pseudonym/`. Back it up once with `pseudonym key export`.
 
-[Integrating it](https://falkenslab.github.io/pseudonym/docs/guides/integrating) walks through it step by step, and [examples/classroom-mcp](https://github.com/falkenslab/pseudonym/tree/main/examples/classroom-mcp) is a complete MCP server that uses it.
+## 🧪 A taste of the code
 
-## The CLI
+🔌 **In an MCP server**, everyone in a tool's result goes through `remember()`, and the model reads:
 
-For the person in charge, never for an agent:
+```json
+[{ "student": "A-9NQWD5", "grades": { "practice1": 8.5 } }, { "student": "A-TA8D1J", "grades": { "practice1": 6 } }]
+```
+
+✍️ **Free text** keeps its meaning and loses who wrote it:
+
+```ts
+await redact("Soy Marta Quiroga, mi móvil es 612 345 678 y mi SSN 123-45-6789.", { service, countries: ["ES", "US"] });
+// "Soy A-9NQWD5, mi móvil es [PHONE_1] y mi SSN [US_SSN_1]."
+```
+
+👩‍🏫 **In the person's terminal**, without writing code:
 
 ```sh
-pseudonym whois A-7K3F9Q                  # who an alias is
-pseudonym alias "ana perez"               # someone's aliases
-pseudonym redact < post.txt               # a text safe to paste into a chat
-pseudonym reveal < answer.txt             # the model's answer, with names
-pseudonym remember --csv class.csv --only-aliases   # a class export, as aliases
-pseudonym key export > pseudonym-key.txt  # back up the key, once
+pseudonym whois A-9NQWD5                                    # who an alias is
+pseudonym redact < post.txt                                 # a text safe to paste into a chat
+pseudonym reveal < answer.txt                               # the model's answer, with the names back
+pseudonym remember --csv class.csv --only-aliases           # a class export, as aliases
 ```
 
-See [the CLI](https://falkenslab.github.io/pseudonym/docs/cli/overview) for every command.
+A complete MCP server that does all of this over a made-up course is in [examples/classroom-mcp](https://github.com/falkenslab/pseudonym/tree/main/examples/classroom-mcp).
 
-## Before you use it
+## 🧰 What's inside
 
-- **It's pseudonymization, not anonymization**: the data stays personal data for whoever holds the key, and what people write about themselves can still identify them. Redaction doesn't catch street addresses, birth dates, people outside the directory, or ids without a check digit.
-- **Keep agents away from the key**: an agent on the same machine that can read the key folder or run `pseudonym` could undo it. Deny both in its client; the documentation gives [tested rules for Claude Code and their limits](https://falkenslab.github.io/pseudonym/docs/security/keeping-agents-away).
-- **Back up the key**: losing it loses every way back, by design.
+| Area | For example |
+| --- | --- |
+| 🧷 Aliases | `remember()` for one person or a list, per service or linked across services, first alias kept |
+| 🔙 The way back | `resolve()` for write tools, `pseudonym whois`, `reveal` and `resolve` for the person |
+| ✍️ Redaction | `redact()` with names from the directory, cards, IBANs and ids of ES, US, CA, DE, MX, CL, AR, BR and PT |
+| 🗂️ The directory | AES-256-GCM, safe across processes, `link`, `forget` (one, a service, everyone), `prune` |
+| 🔑 The key | Created on first use, `key export`, `key import`, `key fingerprint`, refuses to work if it goes missing |
+| 💻 The CLI | Everything above without code, CSV in and out, `--json` for scripts |
 
-Read [what it protects against](https://falkenslab.github.io/pseudonym/docs/security/threat-model) and [the legal frame](https://falkenslab.github.io/pseudonym/docs/security/gdpr) before sending real people's data anywhere.
+The [API reference](https://falkenslab.github.io/pseudonym/docs/api) and the [command reference](https://falkenslab.github.io/pseudonym/docs/cli/reference) list it all.
 
-## Contributing
+## 📚 Documentation
 
-The design lives in `.minispec/` (start with `core/project.md` and `decisions/`); each planned feature has a note there and an issue here.
+- **[Integrating it](https://falkenslab.github.io/pseudonym/docs/guides/integrating)**: where the calls go in your program, step by step.
+- **[Redacting free text](https://falkenslab.github.io/pseudonym/docs/guides/redaction)**: what's replaced in each country, and what isn't.
+- **[The CLI](https://falkenslab.github.io/pseudonym/docs/cli/overview)**: resolving aliases, redacting by hand, the key and the directory.
+- **[What it protects against](https://falkenslab.github.io/pseudonym/docs/security/threat-model)**: the threat model and the [GDPR frame](https://falkenslab.github.io/pseudonym/docs/security/gdpr).
+- **[Keeping agents away from the key](https://falkenslab.github.io/pseudonym/docs/security/keeping-agents-away)**: tested Claude Code rules, and what they can't stop.
+- **[How it works inside](https://falkenslab.github.io/pseudonym/docs/security/how-it-works)**: HMAC, HKDF, AES-GCM and the directory's file.
 
-```sh
-npm install
-npm run typecheck && npm run lint && npm test
-npm run build                  # dist/, with types; the CLI is dist/cli.js
-npm run docs:install && npm run docs:start   # the documentation site, locally
-```
+## 🛠️ Developing
 
-## License
+`npm install`, then `npm run typecheck && npm run lint && npm test`; `npm run docs:start` previews the documentation site. The design decisions are in [.minispec/](https://github.com/falkenslab/pseudonym/tree/main/.minispec), and each planned change has a note there and an issue here.
 
-MIT, Falkenslab.
+<div align="center">
+
+Made with 💖 by Falken's Lab Team
+
+</div>

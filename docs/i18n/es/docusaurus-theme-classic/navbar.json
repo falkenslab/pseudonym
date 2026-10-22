@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "pseudonym",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "pseudonym",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Guides": {
+    "message": "Guías",
+    "description": "Navbar item with label Guides"
+  },
+  "item.label.CLI": {
+    "message": "CLI",
+    "description": "Navbar item with label CLI"
+  },
+  "item.label.Security and privacy": {
+    "message": "Seguridad y privacidad",
+    "description": "Navbar item with label Security and privacy"
+  },
+  "item.label.API reference": {
+    "message": "Referencia de la API",
+    "description": "Navbar item with label API reference"
+  },
+  "item.label.npm": {
+    "message": "npm",
+    "description": "Navbar item with label npm"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

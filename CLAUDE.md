@@ -22,15 +22,15 @@ Project management goes through skills in `.claude/skills/`: `commit` (runs `upd
 - `npm run build` — `dist/` with declarations, from `tsconfig.build.json`; the CLI is `dist/cli.js`.
 - `npx tsx src/cli.ts <command>` — run the CLI from source.
 - `cd examples/classroom-mcp && npm install && npm test` — the example MCP server's smoke test (after `npm run build` at the root: it uses the library from `file:../..`); `npm run demo` prints what a model would read.
-- `npm run docs:install`, then `npm run docs:start` (local preview) or `npm run docs:build` (fails on broken links) — the documentation site in `docs/`.
+- `npm run docs:install`, then `npm run docs:start` (local preview; `npm run docs:start -- --locale es` for the Spanish one) or `npm run docs:build` (both languages; fails on broken links) — the documentation site in `docs/`.
 
 Run tests from the repository root: the CLI tests spawn `src/cli.ts` by a relative path.
 
-The documentation site (`docs/content/`, published at falkenslab.github.io/pseudonym) is part of every visible change: the `update-docs` skill maps changes to pages. Never edit `docs/versioned_docs/`: those are released versions.
+The documentation site (`docs/content/`, published at falkenslab.github.io/pseudonym, in English and Spanish, one version: ADR-009) is part of every visible change: the `update-docs` skill maps changes to pages, and every English page has its Spanish translation in `docs/i18n/es/` that changes with it.
 
 ## Things easy to get wrong
 
-- Everything is in English (code, docs, CLI messages, commits), even when the conversation is in another language (ADR-004).
+- Everything is in English (code, docs, CLI messages, commits), even when the conversation is in another language (ADR-004); the one exception is the documentation site's Spanish translation in `docs/i18n/es/` (ADR-009).
 - Tests set `PSEUDONYM_HOME` to their own temporary folder; never let a test or a manual run touch the real `%APPDATA%\pseudonym\` key or directory.
 - The CLI is for the person in charge only, never something an agent should run; it keeps results on stdout and errors (`PseudonymError`) on stderr.
 - No runtime dependencies, and cryptography only from `node:crypto`.

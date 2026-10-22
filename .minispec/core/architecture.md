@@ -22,5 +22,5 @@ person's terminal --pseudonym <command>--> cli.ts -> the same modules
 
 - `src/` — the library and the CLI.
 - `examples/classroom-mcp/` — an MCP server using the library from `file:../..`, with its own `package.json` (the MCP SDK stays out of the library's dependencies), a demo and a smoke test run by `verify`.
-- `docs/` — the documentation site (Docusaurus, its own `package.json`), published to GitHub Pages by `.github/workflows/docs.yml`; its API reference is generated from `src/index.ts`'s doc comments, and each release keeps a snapshot in `docs/versioned_docs/`.
+- `docs/` — the documentation site (Docusaurus, its own `package.json`), published to GitHub Pages by `.github/workflows/docs.yml`; its API reference is generated from `src/index.ts`'s doc comments. One version (`main`), in English (`docs/content/`) and Spanish (`docs/i18n/es/`, ADR-009).
 - `test/` — tests mirroring `src/`; `test/fixtures/spanish-texts.ts`, the redaction spike's texts with their expected entities; `test/fixtures/country-texts.ts`, texts per language with ids generated apart from `src/patterns.ts`.

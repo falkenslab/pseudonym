@@ -48,8 +48,7 @@
     "prepublishOnly": "npm run typecheck && npm run lint && npm test",
     "docs:install": "npm --prefix docs ci",
     "docs:start": "npm --prefix docs start",
-    "docs:build": "npm --prefix docs run build",
-    "docs:version": "npm --prefix docs run docs:version --"
+    "docs:build": "npm --prefix docs run build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

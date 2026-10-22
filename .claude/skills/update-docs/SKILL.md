@@ -1,6 +1,6 @@
 ---
 name: update-docs
-description: Keep pseudonym's documentation in step with the code - the documentation site (docs/, Docusaurus, published at falkenslab.github.io/pseudonym), the README, the CLI's usage text, the doc comments of the public API, the classroom example and .minispec/core. Use after ANY change to src/, examples/ or the package scripts, before every commit of such a change, and before a release. A change is not done until its documentation is.
+description: Keep pseudonym's documentation in step with the code - the documentation site (docs/, Docusaurus, published at falkenslab.github.io/pseudonym, in English and its Spanish translation), the README, the CLI's usage text, the doc comments of the public API, the classroom example and .minispec/core. Use after ANY change to src/, examples/ or the package scripts, before every commit of such a change, and before a release. A change is not done until its documentation is.
 ---
 
 # Keep the documentation up to date
@@ -51,7 +51,7 @@ Search too: `grep -rn "<the option, command or function>" docs/content README.md
 
 - **Doc comments** on every new or changed export from `src/index.ts`: what it's for and when to use it, not how it's built (each overload gets its own). Cryptographic choices name their construction and parameters (conventions). An export without one shows as "-" in the API reference.
 - **The site's pages**: change the existing explanation rather than appending a note that contradicts it. Pages are CommonMark (`.md`), not MDX: write `<placeholders>` inside backticks. A new page goes in `docs/sidebars.ts`, linked from the pages that lead to it.
-- **Never edit `docs/versioned_docs/`**: those are released versions. The only exception is a factual error in what that version actually did.
+- **Spanish, in the same change** (ADR-009): every English page in `docs/content/` has its translation in `docs/i18n/es/docusaurus-plugin-content-docs/current/` at the same path. Change both. Translated headings keep the English anchor (`## Alias por servicio y enlace {#per-service-aliases-and-linking}`), so links stay the same; Spanish pages link to the API reference by URL (`/docs/api`), since it exists only in English. A new page needs its translation; new texts on the home page go through `translate()` and get their Spanish in `docs/i18n/es/code.json`; sidebar, navbar and footer labels in the other JSON files there. Spanish of Spain, "tú", the RGPD's legal terms, and the project's vocabulary (librería, la CLI, alias, marcador, seudonimización, matchers).
 - **The CLI's usage text** (`USAGE` in `src/cli.ts`): every command it implements, with its arguments.
 - **`README.md`**: short on purpose (what it is, install, quick start, the essentials of safety, links to the site). Touch it only when the change matters at that level.
 - **`.minispec/core/`** (for future Claude sessions): `architecture.md` when a module appears, moves or changes role; `glossary.md` for a new domain term; `project.md` when what the project does or its status changes; a new or updated ADR (`minispec-adr`) when a decision or rule changed. Respect MiniSpec's line limits.

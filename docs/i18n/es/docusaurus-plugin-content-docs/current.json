@@ -1,0 +1,82 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.guides.category.Guides": {
+    "message": "Guías",
+    "description": "The label for category 'Guides' in sidebar 'guides'"
+  },
+  "sidebar.guides.category.Example": {
+    "message": "Ejemplo",
+    "description": "The label for category 'Example' in sidebar 'guides'"
+  },
+  "sidebar.api.category.Classes": {
+    "message": "Clases",
+    "description": "The label for category 'Classes' in sidebar 'api'"
+  },
+  "sidebar.api.category.Interfaces": {
+    "message": "Interfaces",
+    "description": "The label for category 'Interfaces' in sidebar 'api'"
+  },
+  "sidebar.api.category.Type Aliases": {
+    "message": "Alias de tipo",
+    "description": "The label for category 'Type Aliases' in sidebar 'api'"
+  },
+  "sidebar.api.category.Variables": {
+    "message": "Variables",
+    "description": "The label for category 'Variables' in sidebar 'api'"
+  },
+  "sidebar.api.category.Functions": {
+    "message": "Funciones",
+    "description": "The label for category 'Functions' in sidebar 'api'"
+  },
+  "sidebar.api.doc.Overview": {
+    "message": "Resumen",
+    "description": "The label for the doc item 'Overview' in sidebar 'api', linking to the doc api/index"
+  },
+  "sidebar.api.doc.PseudonymError": {
+    "message": "PseudonymError",
+    "description": "The label for the doc item 'PseudonymError' in sidebar 'api', linking to the doc api/classes/PseudonymError"
+  },
+  "sidebar.api.doc.Identifiers": {
+    "message": "Identifiers",
+    "description": "The label for the doc item 'Identifiers' in sidebar 'api', linking to the doc api/interfaces/Identifiers"
+  },
+  "sidebar.api.doc.Person": {
+    "message": "Person",
+    "description": "The label for the doc item 'Person' in sidebar 'api', linking to the doc api/interfaces/Person"
+  },
+  "sidebar.api.doc.Redacted": {
+    "message": "Redacted",
+    "description": "The label for the doc item 'Redacted' in sidebar 'api', linking to the doc api/interfaces/Redacted"
+  },
+  "sidebar.api.doc.RedactOptions": {
+    "message": "RedactOptions",
+    "description": "The label for the doc item 'RedactOptions' in sidebar 'api', linking to the doc api/interfaces/RedactOptions"
+  },
+  "sidebar.api.doc.Country": {
+    "message": "Country",
+    "description": "The label for the doc item 'Country' in sidebar 'api', linking to the doc api/type-aliases/Country"
+  },
+  "sidebar.api.doc.COUNTRIES": {
+    "message": "COUNTRIES",
+    "description": "The label for the doc item 'COUNTRIES' in sidebar 'api', linking to the doc api/variables/COUNTRIES"
+  },
+  "sidebar.api.doc.keyFingerprint": {
+    "message": "keyFingerprint",
+    "description": "The label for the doc item 'keyFingerprint' in sidebar 'api', linking to the doc api/functions/keyFingerprint"
+  },
+  "sidebar.api.doc.redact": {
+    "message": "redact",
+    "description": "The label for the doc item 'redact' in sidebar 'api', linking to the doc api/functions/redact"
+  },
+  "sidebar.api.doc.remember": {
+    "message": "remember",
+    "description": "The label for the doc item 'remember' in sidebar 'api', linking to the doc api/functions/remember"
+  },
+  "sidebar.api.doc.resolve": {
+    "message": "resolve",
+    "description": "The label for the doc item 'resolve' in sidebar 'api', linking to the doc api/functions/resolve"
+  }
+}

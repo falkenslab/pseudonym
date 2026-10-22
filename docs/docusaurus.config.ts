@@ -1,11 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-
-// Released versions, newest first (`npm run docs:version -- <version>` at each release). The
-// newest is what /docs shows; the work in progress on main is "Next", under /docs/next.
-const versions: string[] = existsSync("./versions.json") ? JSON.parse(readFileSync("./versions.json", "utf8")) : [];
 
 const config: Config = {
   title: "pseudonym",
@@ -28,7 +23,12 @@ const config: Config = {
     hooks: { onBrokenMarkdownLinks: "throw" },
   },
 
-  i18n: { defaultLocale: "en", locales: ["en"] },
+  // English at /pseudonym/, Spanish at /pseudonym/es/ (translations in i18n/es/; ADR-009).
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "es"],
+    localeConfigs: { en: { label: "English", htmlLang: "en" }, es: { label: "Español", htmlLang: "es" } },
+  },
 
   presets: [
     [
@@ -39,13 +39,7 @@ const config: Config = {
           routeBasePath: "docs",
           sidebarPath: "./sidebars.ts",
           editUrl: "https://github.com/falkenslab/pseudonym/edit/main/docs/",
-          // Before the first versioned release, main is the only version, served at /docs.
-          ...(versions.length > 0
-            ? {
-                lastVersion: versions[0],
-                versions: { current: { label: "Next (unreleased)", path: "next", banner: "unreleased" } },
-              }
-            : { versions: { current: { label: "Next (unreleased)" } } }),
+          // One version only: the site always describes main, the latest release.
         },
         blog: false,
         theme: { customCss: "./src/css/custom.css" },
@@ -83,7 +77,7 @@ const config: Config = {
     "@docusaurus/theme-mermaid",
     [
       "@easyops-cn/docusaurus-search-local",
-      { hashed: true, docsDir: "content", docsRouteBasePath: "docs", indexBlog: false, highlightSearchTermsOnTargetPage: true },
+      { hashed: true, language: ["en", "es"], docsDir: "content", docsRouteBasePath: "docs", indexBlog: false, highlightSearchTermsOnTargetPage: true },
     ],
   ],
 
@@ -97,7 +91,7 @@ const config: Config = {
         { type: "docSidebar", sidebarId: "cli", position: "left", label: "CLI" },
         { type: "docSidebar", sidebarId: "security", position: "left", label: "Security and privacy" },
         { type: "docSidebar", sidebarId: "api", position: "left", label: "API reference" },
-        { type: "docsVersionDropdown", position: "right" },
+        { type: "localeDropdown", position: "right" },
         { href: "https://www.npmjs.com/package/@falkenslab/pseudonym", label: "npm", position: "right" },
         { href: "https://github.com/falkenslab/pseudonym", label: "GitHub", position: "right" },
       ],
@@ -130,7 +124,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `MIT licensed. Copyright © ${new Date().getFullYear()} Falkenslab.`,
+      copyright: "Made with 💖 by Falken's Lab Team",
     },
     prism: {
       theme: prismThemes.github,

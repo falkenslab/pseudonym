@@ -1,0 +1,50 @@
+{
+  "link.title.Documentation": {
+    "message": "Documentación",
+    "description": "The title of the footer links column with title=Documentation in the footer"
+  },
+  "link.title.Project": {
+    "message": "Proyecto",
+    "description": "The title of the footer links column with title=Project in the footer"
+  },
+  "link.title.Related": {
+    "message": "Relacionado",
+    "description": "The title of the footer links column with title=Related in the footer"
+  },
+  "link.item.label.Installation": {
+    "message": "Instalación",
+    "description": "The label of footer link with label=Installation linking to /docs/guides/installation"
+  },
+  "link.item.label.The CLI": {
+    "message": "La CLI",
+    "description": "The label of footer link with label=The CLI linking to /docs/cli/overview"
+  },
+  "link.item.label.Security and privacy": {
+    "message": "Seguridad y privacidad",
+    "description": "The label of footer link with label=Security and privacy linking to /docs/security/threat-model"
+  },
+  "link.item.label.API reference": {
+    "message": "Referencia de la API",
+    "description": "The label of footer link with label=API reference linking to /docs/api"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/falkenslab/pseudonym"
+  },
+  "link.item.label.npm": {
+    "message": "npm",
+    "description": "The label of footer link with label=npm linking to https://www.npmjs.com/package/@falkenslab/pseudonym"
+  },
+  "link.item.label.Design decisions (ADRs)": {
+    "message": "Decisiones de diseño (ADR)",
+    "description": "The label of footer link with label=Design decisions (ADRs) linking to https://github.com/falkenslab/pseudonym/tree/main/.minispec/decisions"
+  },
+  "link.item.label.Classroom MCP example": {
+    "message": "Ejemplo MCP del aula",
+    "description": "The label of footer link with label=Classroom MCP example linking to https://github.com/falkenslab/pseudonym/tree/main/examples/classroom-mcp"
+  },
+  "link.item.label.Model Context Protocol": {
+    "message": "Model Context Protocol",
+    "description": "The label of footer link with label=Model Context Protocol linking to https://modelcontextprotocol.io"
+  }
+}
