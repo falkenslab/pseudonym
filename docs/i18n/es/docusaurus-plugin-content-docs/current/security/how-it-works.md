@@ -57,6 +57,10 @@ Todos los programas de la máquina comparten el archivo:
 - **Las lecturas** no toman bloqueo: el renombrado sustituye el archivo entero, así que un lector siempre ve una versión completa.
 - Un fallo entre la escritura y el renombrado deja un archivo temporal suelto y el directorio anterior intacto.
 
+## Almacenamiento plano {#plain-storage}
+
+Con [`PSEUDONYM_STORAGE=plain`](../guides/storage.md), la misma lógica del directorio funciona con otro almacén: el fichero es `directory.json`, JSON con sangría, un nombre de formato y una versión, escrito con el mismo fichero temporal, el mismo renombrado y el mismo bloqueo; los alias son `A-` y 6 caracteres aleatorios en base32 de Crockford (`randomBytes`), que se vuelven a sortear si ya existen; los matchers son los propios identificadores, `tipo:valor`. No se lee ni se crea ninguna clave. Una carpeta con el directorio del otro modo, o con los dos, se rechaza antes de leer nada.
+
 ## Reconocer a las personas {#matching-people}
 
 `remember()` busca a una persona con cada identificador, del más fuerte al más débil:

@@ -9,7 +9,7 @@ Con la librería, el modelo ve alias en lugar de personas y marcadores en lugar 
 ## En qué se apoya {#what-it-relies-on}
 
 - **Tu programa pasa a cada persona por ella.** La librería sustituye lo que le das; un campo que olvides (la URL de un avatar, un nombre de usuario en un enlace) sale tal cual. Intégrala donde se construyen los resultados y comprueba que no se filtra nada ([Probar tu integración](../guides/testing.md)).
-- **La clave se queda en la máquina y lejos del agente.** La clave y el directorio están en la carpeta del usuario, legibles solo por él. El modelo nunca los ve; un agente que se ejecute en la misma máquina podría, salvo que el cliente se lo impida.
+- **La clave se queda en la máquina y lejos del agente.** (En [almacenamiento plano](../guides/storage.md) no hay clave: lo que debe quedar lejos es el propio directorio, en claro, protegido por los permisos de la carpeta.) La clave y el directorio están en la carpeta del usuario, legibles solo por él. El modelo nunca los ve; un agente que se ejecute en la misma máquina podría, salvo que el cliente se lo impida.
 
 ## De qué no te protege {#what-it-doesnt-protect-against}
 

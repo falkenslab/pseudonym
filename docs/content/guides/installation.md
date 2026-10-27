@@ -38,7 +38,7 @@ The first time a program calls the library, it creates the key and the folder th
 - `~/.config/pseudonym/` on macOS and Linux;
 - or the folder in the `PSEUDONYM_HOME` environment variable, if set (tests always set it: see [Testing your integration](testing.md)).
 
-The only other setting is `PSEUDONYM_LINK=true`, which turns [cross-service linking](concepts.md#per-service-aliases-and-linking) on for every call that doesn't say otherwise.
+Two other settings: `PSEUDONYM_LINK=true` turns [cross-service linking](concepts.md#per-service-aliases-and-linking) on for every call that doesn't say otherwise, and `PSEUDONYM_STORAGE=plain` keeps the directory as readable JSON with no key (see [Storage: encrypted or plain](storage.md)).
 
 ## Next
 

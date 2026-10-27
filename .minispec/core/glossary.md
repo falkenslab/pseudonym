@@ -24,6 +24,10 @@ An HMAC of an identifier kept in the directory, to recognize a person without st
 
 The local encrypted file of people met: alias, display name, service ids, matchers, first and last seen.
 
+## Storage mode
+
+How the directory is kept: `encrypted` (the default, under the key) or `plain` (readable JSON, no key, data in clear), ADR-010.
+
 ## Key
 
 32 random bytes in the shared folder; everything derives from it. Lost key, lost way back.

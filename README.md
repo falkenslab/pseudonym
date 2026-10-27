@@ -92,7 +92,7 @@ A complete MCP server that does all of this over a made-up course is in [example
 | 🧷 Aliases | `remember()` for one person or a list, per service or linked across services, first alias kept |
 | 🔙 The way back | `resolve()` for write tools, `pseudonym whois`, `reveal` and `resolve` for the person |
 | ✍️ Redaction | `redact()` with names from the directory, cards, IBANs and ids of ES, US, CA, DE, MX, CL, AR, BR and PT |
-| 🗂️ The directory | AES-256-GCM, safe across processes, `link`, `forget` (one, a service, everyone), `prune` |
+| 🗂️ The directory | AES-256-GCM by default, or [plain JSON without a key](https://falkenslab.github.io/pseudonym/docs/guides/storage) where the OS protects the folder; safe across processes, `link`, `forget`, `prune`, `migrate` |
 | 🔑 The key | Created on first use, `key export`, `key import`, `key fingerprint`, refuses to work if it goes missing |
 | 💻 The CLI | Everything above without code, CSV in and out, `--json` for scripts |
 

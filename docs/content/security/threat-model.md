@@ -9,7 +9,7 @@ With the library in place, the model sees aliases instead of people, placeholder
 ## What it relies on
 
 - **Your program passes every person through it.** The library replaces what you give it; a field you forget (an avatar URL, a username in a link) goes as it is. Integrate it where results are built, and test that nothing leaks ([Testing your integration](../guides/testing.md)).
-- **The key stays on the machine and away from the agent.** The key and the directory are in the user's folder, readable by the user only. The model never sees them; an agent running on the same machine could, unless the client denies it.
+- **The key stays on the machine and away from the agent.** (In [plain storage](../guides/storage.md) there is no key: the directory itself, in clear, is what must stay away, protected by the folder's permissions.) The key and the directory are in the user's folder, readable by the user only. The model never sees them; an agent running on the same machine could, unless the client denies it.
 
 ## What it doesn't protect against
 

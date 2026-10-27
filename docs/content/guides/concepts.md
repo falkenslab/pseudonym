@@ -30,7 +30,7 @@ Aliases are case-insensitive where the library takes them back (`resolve`, `pseu
 
 ## Directory
 
-A local encrypted file of the people your program has met, shared by every program on the machine that uses the library. For each person it keeps:
+A local file of the people your program has met, encrypted by default (it can also be [plain JSON](storage.md), without a key), shared by every program on the machine that uses the library. For each person it keeps:
 
 - their alias, and any aliases [linked](../cli/tidying-the-directory.md#link-two-aliases) into it;
 - their display name (what `pseudonym whois` shows);

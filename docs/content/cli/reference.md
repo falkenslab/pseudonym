@@ -15,6 +15,7 @@
 | `pseudonym forget <alias>` | Remove a person from the directory | `0`, `2` unknown alias |
 | `pseudonym forget --service <service> [--yes]` | Remove the people met only in that service; others lose its id. Asks to confirm | `0`, `1` not confirmed, `2` unknown service |
 | `pseudonym forget --all [--yes]` | Empty the directory, keeping the key. Asks to confirm | `0`, `1` not confirmed |
+| `pseudonym migrate --to plain\|encrypted [--yes]` | Convert the directory to the other [storage](../guides/storage.md), same aliases, original kept as a `.bak`. Asks to confirm | `0`, `1` not confirmed, nothing to convert, target exists |
 | `pseudonym prune --older-than <n>(d\|m\|y)` | Remove people not seen for that long | `0`, `1` bad age |
 | `pseudonym key fingerprint` | A short code of the key | `0`, `2` no key yet |
 | `pseudonym key export` | The key as base64 on stdout, a warning on stderr | `0`, `2` no key yet |
@@ -30,6 +31,7 @@ All commands exit with `1` on an error, with a message on stderr that says what 
 | --- | --- |
 | `PSEUDONYM_HOME` | The folder for the key and the directory, instead of `%APPDATA%\pseudonym\` or `~/.config/pseudonym/` |
 | `PSEUDONYM_SERVICE` | The service for commands that take one when `--service` isn't given, instead of `default` |
+| `PSEUDONYM_STORAGE` | `encrypted` (default) or `plain`: how the directory is kept (see [Storage](../guides/storage.md)). In plain storage there is no key, and `key` commands exit with `1` |
 
 ## Files in the folder
 
@@ -38,7 +40,8 @@ All commands exit with `1` on an error, with a message on stderr that says what 
 | `key` | The key: 32 random bytes |
 | `used` | An empty marker: a key existed here, so a missing one is a loss, not a first run |
 | `directory.enc` | The directory, encrypted |
+| `directory.json` | The directory in plain storage, readable, instead of `directory.enc` (and with no `key` or `used`) |
 | `directory.lock` | Present only while a program is changing the directory |
-| `directory.enc.<date>.bak` | The previous directory, after `key import --force` |
+| `directory.enc.<date>.bak`, `directory.json.<date>.bak` | The previous directory, after `key import --force` or `pseudonym migrate` |
 
 See [How it works](../security/how-it-works.md) for what's inside them.

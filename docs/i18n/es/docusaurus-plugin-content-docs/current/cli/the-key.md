@@ -1,5 +1,7 @@
 # Hacer copia de la clave y trasladarla {#backing-up-and-moving-the-key}
 
+En [almacenamiento plano](../guides/storage.md) no hay clave y nada de esto se aplica: lo que protege el directorio son los permisos de la carpeta.
+
 La clave se crea la primera vez que un programa de esta máquina usa la librería. Todo depende de ella: sin ella no se puede resolver ningún alias ni leer el directorio. **Haz una copia una vez, el primer día.**
 
 ## La huella {#the-fingerprint}

@@ -38,7 +38,7 @@ La primera vez que un programa llama a la librería, esta crea la clave y la car
 - `~/.config/pseudonym/` en macOS y Linux;
 - o la carpeta indicada en la variable de entorno `PSEUDONYM_HOME`, si está definida (los tests siempre la definen: consulta [Probar tu integración](testing.md)).
 
-El único otro ajuste es `PSEUDONYM_LINK=true`, que activa el [enlace entre servicios](concepts.md#per-service-aliases-and-linking) en todas las llamadas que no indiquen lo contrario.
+Hay otros dos ajustes: `PSEUDONYM_LINK=true` activa el [enlace entre servicios](concepts.md#per-service-aliases-and-linking) en todas las llamadas que no indiquen lo contrario, y `PSEUDONYM_STORAGE=plain` guarda el directorio como JSON legible y sin clave (consulta [Almacenamiento: cifrado o plano](storage.md)).
 
 ## Siguientes pasos {#next}
 

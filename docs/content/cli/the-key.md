@@ -1,5 +1,7 @@
 # Backing up and moving the key
 
+In [plain storage](../guides/storage.md) there is no key, and none of this applies: the directory's protection is the folder's permissions.
+
 The key is created the first time a program on this machine uses the library. Everything depends on it: without it, no alias can be resolved and the directory can't be read. **Back it up once, the first day.**
 
 ## The fingerprint

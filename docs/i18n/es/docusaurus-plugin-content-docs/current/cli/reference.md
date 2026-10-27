@@ -15,6 +15,7 @@
 | `pseudonym forget <alias>` | Elimina a una persona del directorio | `0`, `2` alias desconocido |
 | `pseudonym forget --service <service> [--yes]` | Elimina a las personas vistas solo en ese servicio; las demás pierden su identificador. Pide confirmación | `0`, `1` sin confirmar, `2` servicio desconocido |
 | `pseudonym forget --all [--yes]` | Vacía el directorio, conservando la clave. Pide confirmación | `0`, `1` sin confirmar |
+| `pseudonym migrate --to plain\|encrypted [--yes]` | Convierte el directorio al otro [almacenamiento](../guides/storage.md), con los mismos alias y el original como `.bak`. Pide confirmación | `0`, `1` sin confirmar, nada que convertir, el destino ya existe |
 | `pseudonym prune --older-than <n>(d\|m\|y)` | Elimina a las personas que llevan ese tiempo sin aparecer | `0`, `1` antigüedad no válida |
 | `pseudonym key fingerprint` | Un código corto de la clave | `0`, `2` todavía no hay clave |
 | `pseudonym key export` | La clave en base64 en stdout, un aviso en stderr | `0`, `2` todavía no hay clave |
@@ -30,6 +31,7 @@ Todos los comandos terminan con `1` ante un error, con un mensaje en stderr que 
 | --- | --- |
 | `PSEUDONYM_HOME` | La carpeta de la clave y el directorio, en lugar de `%APPDATA%\pseudonym\` o `~/.config/pseudonym/` |
 | `PSEUDONYM_SERVICE` | El servicio para los comandos que reciben uno cuando no se indica `--service`, en lugar de `default` |
+| `PSEUDONYM_STORAGE` | `encrypted` (por defecto) o `plain`: cómo se guarda el directorio (consulta [Almacenamiento](../guides/storage.md)). En almacenamiento plano no hay clave, y los comandos `key` salen con `1` |
 
 ## Ficheros de la carpeta {#files-in-the-folder}
 
@@ -38,7 +40,8 @@ Todos los comandos terminan con `1` ante un error, con un mensaje en stderr que 
 | `key` | La clave: 32 bytes aleatorios |
 | `used` | Una marca vacía: aquí existió una clave, así que si falta es una pérdida, no una primera ejecución |
 | `directory.enc` | El directorio, cifrado |
+| `directory.json` | El directorio en almacenamiento plano, legible, en lugar de `directory.enc` (y sin `key` ni `used`) |
 | `directory.lock` | Presente solo mientras un programa está modificando el directorio |
-| `directory.enc.<date>.bak` | El directorio anterior, tras `key import --force` |
+| `directory.enc.<date>.bak`, `directory.json.<date>.bak` | El directorio anterior, tras `key import --force` o `pseudonym migrate` |
 
 Consulta [Cómo funciona](../security/how-it-works.md) para saber qué contienen.

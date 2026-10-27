@@ -57,6 +57,10 @@ Every program on the machine shares the file:
 - **Reads** take no lock: the rename replaces the file whole, so a reader always sees one complete version.
 - A crash between writing and renaming leaves a stray temporary file and the previous directory intact.
 
+## Plain storage
+
+With [`PSEUDONYM_STORAGE=plain`](../guides/storage.md), the same directory logic runs with a different store: the file is `directory.json`, pretty-printed JSON with a format name and a version, written through the same temporary file, rename and lock; aliases are `A-` and 6 random Crockford base32 characters (`randomBytes`), drawn again if taken; matchers are the identifiers themselves, `kind:value`. No key is read or created. A folder holding the other mode's directory, or both, is refused before anything is read.
+
 ## Matching people
 
 `remember()` looks a person up with each identifier, strongest first:

@@ -4,7 +4,7 @@
 import { readFile, rename } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
-import { aliasOf, directoryPath, forget, forgetAll, forgetService, link, peopleIn, prune, remember, reveal, services as listServices, whois, type Entry, type Person } from "./directory.js";
+import { aliasOf, directoryPath, forget, forgetAll, forgetService, link, migrate, peopleIn, prune, remember, reveal, services as listServices, storageMode, whois, type Entry, type Person, type StorageMode } from "./directory.js";
 import { PseudonymError } from "./errors.js";
 import { createKey, fingerprint, isCode, KEY_BYTES, readKey, replaceKey } from "./home.js";
 import { checkCountries, redact, type Country } from "./redact.js";
@@ -32,12 +32,15 @@ Commands:
   forget --service <service> | --all [--yes]
                                      remove a whole service, or everyone (asks to confirm)
   prune --older-than <n>(d|m|y)      remove people not seen for that long
+  migrate --to plain|encrypted [--yes]
+                                     convert the directory to the other storage, keeping the original as a .bak
   key fingerprint                    a short code of the key, to compare machines
   key export                         print the key, to back it up or move it
   key import [--force]               read a key from stdin (--force replaces a different one)
   help                               this text
 
 The service, where a command takes one: --service, else PSEUDONYM_SERVICE, else "default".
+The storage: PSEUDONYM_STORAGE=encrypted (the default) or plain (directory.json, unencrypted, no key).
 Exit codes: 0 done, 1 error, 2 not found.`;
 
 const DEFAULT_SERVICE = "default";
@@ -258,18 +261,18 @@ async function resolveCommand(args: string[]): Promise<number> {
 }
 
 /**
- * Whether the person confirms a removal that can't be undone: --yes, or, on a terminal, typing `word` back.
- * Without a terminal and without --yes, nothing is removed.
+ * Whether the person confirms an action with lasting effects (`consequence` says which): --yes, or, on a terminal, typing `word` back.
+ * Without a terminal and without --yes, nothing happens.
  */
-async function confirmed(word: string, what: string, yes: boolean | undefined): Promise<boolean> {
+async function confirmed(word: string, consequence: string, yes: boolean | undefined): Promise<boolean> {
   if (yes) return true;
   if (!process.stdin.isTTY) {
-    warn(`This removes ${what} and can't be undone: add --yes to confirm when not on a terminal. Nothing was changed.`);
+    warn(`${consequence}: add --yes to confirm when not on a terminal. Nothing was changed.`);
     return false;
   }
   const prompt = createInterface({ input: process.stdin, output: process.stderr });
   try {
-    const answer = await prompt.question(`This removes ${what} and can't be undone. Type ${word} to confirm: `);
+    const answer = await prompt.question(`${consequence}. Type ${word} to confirm: `);
     if (answer.trim() === word) return true;
     warn("Not confirmed: nothing was changed.");
     return false;
@@ -285,7 +288,7 @@ async function forgetCommand(args: string[]): Promise<number> {
 
   if (values.all) {
     const people = (await listServices()).length ? `everyone in the directory` : "nobody (the directory is empty)";
-    if (!(await confirmed("all", people, values.yes))) return 1;
+    if (!(await confirmed("all", `This removes ${people} and can't be undone`, values.yes))) return 1;
     const removed = await forgetAll();
     out(`Forgot ${plural(removed, "person", "people")}. The key is kept: anyone met again gets the same alias.`);
     return OK;
@@ -298,7 +301,7 @@ async function forgetCommand(args: string[]): Promise<number> {
       warn(`The directory has nobody in "${service}".`);
       return NOT_FOUND;
     }
-    if (!(await confirmed(service, `the ${plural(known.people, "person", "people")} met in ${service}`, values.yes))) return 1;
+    if (!(await confirmed(service, `This removes the ${plural(known.people, "person", "people")} met in ${service} and can't be undone`, values.yes))) return 1;
     const { removed, kept } = await forgetService(service);
     out(`Forgot ${service}: removed ${plural(removed, "person", "people")}; ${plural(kept, "person", "people")} also met in other services kept.`);
     return OK;
@@ -310,6 +313,21 @@ async function forgetCommand(args: string[]): Promise<number> {
     return NOT_FOUND;
   }
   out(`Forgot ${alias.trim().toUpperCase()}.`);
+  return OK;
+}
+
+async function migrateCommand(args: string[]): Promise<number> {
+  const { values } = parse(args, { to: { type: "string" }, yes: { type: "boolean" } }, "migrate");
+  const to = need(values.to, "--to plain or --to encrypted") as StorageMode;
+  if (to !== "plain" && to !== "encrypted") throw new PseudonymError(`Unknown storage "${to}": use --to plain or --to encrypted.`);
+  const what = to === "plain" ? "the encrypted directory into a plain, unencrypted directory.json" : "the plain directory into an encrypted directory.enc";
+  if (!(await confirmed(to, `This converts ${what}; the original is kept as a .bak`, values.yes))) return 1;
+  const result = await migrate(to);
+  out(`Converted ${plural(result.people, "person", "people")} to ${to} storage, with the same aliases. The original is in ${result.backup}.`);
+  if (to === "plain" && result.lostMatchers) {
+    warn(`${plural(result.lostMatchers, "person", "people")} can no longer be recognized by email or institutional id (the encrypted directory only had their HMACs); ${plural(result.unmatchable, "person has", "people have")} no service id either, so they will get a new alias if met again.`);
+  }
+  warn(`Now set PSEUDONYM_STORAGE=${to} for every program and the CLI${to === "encrypted" ? " (or unset it: encrypted is the default)" : ""}.`);
   return OK;
 }
 
@@ -371,6 +389,9 @@ async function importKey(force: boolean): Promise<number> {
 }
 
 async function keyCommand(args: string[]): Promise<number> {
+  if (storageMode() === "plain") {
+    throw new PseudonymError('The storage is "plain": there is no key to show, export or import. The directory is directory.json, protected only by the folder\x27s permissions.');
+  }
   const [sub, ...rest] = args;
   if (sub === "import") {
     if (rest.some((arg) => arg !== "--force")) {
@@ -459,6 +480,8 @@ export async function run(args: string[]): Promise<number> {
       out(`Removed ${removed} ${removed === 1 ? "person" : "people"}.`);
       return OK;
     }
+    case "migrate":
+      return migrateCommand(rest);
     case "key":
       return keyCommand(rest);
     default:

@@ -3,7 +3,7 @@
 import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 import { readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { ALIAS_LENGTH, aliasFor, linkingOn, normalizeIdentifiers, type Identifier, type Identifiers } from "./aliases.js";
+import { ALIAS_LENGTH, aliasFor, base32, linkingOn, normalizeIdentifiers, type Identifier, type Identifiers } from "./aliases.js";
 import { PseudonymError } from "./errors.js";
 import { ensureHome, homeDir, isCode, loadKey, subkey } from "./home.js";
 import { fold } from "./text.js";
@@ -40,20 +40,40 @@ interface Data {
   entries: Entry[];
 }
 
-interface Keys {
-  aliases: Buffer;
-  directory: Buffer;
-  matchers: Buffer;
+/** Where the directory is kept: `encrypted` (the default: AES-256-GCM, aliases and matchers under the key) or `plain`. */
+export type StorageMode = "encrypted" | "plain";
+
+/**
+ * How one storage mode keeps the directory (ADR-010). The directory's logic is the same for both: only the file,
+ * its encoding, how an identifier is recognized and how a new alias is made differ.
+ */
+interface Store {
+  mode: StorageMode;
+  file: string;
+  decode(bytes: Buffer): Data;
+  encode(data: Data): Buffer;
+  /** What the directory keeps to recognize an email or an institutional id. */
+  matcher(identifier: Identifier): string;
+  /** A new person's alias, never one already `taken`. */
+  newAlias(service: string, best: Identifier, link: boolean, taken: (alias: string) => boolean): string;
 }
 
-// File layout: MAGIC, VERSION, 12-byte nonce, 16-byte GCM tag, ciphertext of the JSON. MAGIC and VERSION are
-// authenticated as additional data, so a changed header fails like a changed body.
+// Encrypted file layout: MAGIC, VERSION, 12-byte nonce, 16-byte GCM tag, ciphertext of the JSON. MAGIC and VERSION
+// are authenticated as additional data, so a changed header fails like a changed body.
 const MAGIC = Buffer.from("PSEUDONYM-DIRECTORY");
 const VERSION = 1;
 const HEADER = Buffer.concat([MAGIC, Buffer.from([VERSION])]);
 
-const directoryPath = () => path.join(homeDir(), "directory.enc");
+// The plain file: readable JSON with a format name and a version, so a future change can be told apart.
+const PLAIN_FORMAT = "pseudonym-directory";
+const PLAIN_VERSION = 1;
+
+const encryptedPath = () => path.join(homeDir(), "directory.enc");
+const plainPath = () => path.join(homeDir(), "directory.json");
 const lockPath = () => path.join(homeDir(), "directory.lock");
+
+/** The directory file of the configured mode (`directory.enc` or `directory.json`). */
+const directoryPath = () => (storageMode() === "plain" ? plainPath() : encryptedPath());
 
 const LOCK_STALE_MS = 10_000;
 const LOCK_TIMEOUT_MS = 15_000;
@@ -62,9 +82,25 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /** Counters for tests: how many times the file was written. */
 export const stats = { writes: 0 };
 
-async function keys(): Promise<Keys> {
-  const key = await loadKey();
-  return { aliases: subkey(key, "aliases"), directory: subkey(key, "directory"), matchers: subkey(key, "matchers") };
+let configured: StorageMode | undefined;
+
+const checkMode = (mode: string): StorageMode => {
+  if (mode === "encrypted" || mode === "plain") return mode;
+  throw new PseudonymError(`Unknown storage "${mode}": use "encrypted" (the default) or "plain".`);
+};
+
+/**
+ * Chooses how the directory is kept, for this process: `encrypted` (the default) or `plain`, a readable JSON file
+ * with no key, which stores names and identifiers unencrypted. It overrides `PSEUDONYM_STORAGE`. A folder that
+ * holds the other mode's directory is refused, never converted: see `pseudonym migrate`.
+ */
+export function configure(options: { storage?: StorageMode }): void {
+  configured = options.storage === undefined ? undefined : checkMode(options.storage);
+}
+
+/** The storage mode in use: `configure()`, else `PSEUDONYM_STORAGE`, else `encrypted`. */
+export function storageMode(): StorageMode {
+  return configured ?? (process.env.PSEUDONYM_STORAGE ? checkMode(process.env.PSEUDONYM_STORAGE) : "encrypted");
 }
 
 const unreadable = () =>
@@ -72,43 +108,124 @@ const unreadable = () =>
     `The directory in ${homeDir()} can't be read: it was written with another key, or the file was modified. Nothing was changed. If the key changed, restore the right one with "pseudonym key import".`,
   );
 
-async function read(k: Keys): Promise<Data> {
-  let file: Buffer;
+/** The encrypted store: AES-256-GCM, aliases and matchers as HMACs, all under subkeys of the key (ADR-002, ADR-003). */
+async function encryptedStore(): Promise<Store> {
+  const key = await loadKey();
+  const aliases = subkey(key, "aliases");
+  const directory = subkey(key, "directory");
+  const matchers = subkey(key, "matchers");
+  return {
+    mode: "encrypted",
+    file: encryptedPath(),
+    decode(file) {
+      if (file.length < HEADER.length + 28 || !file.subarray(0, MAGIC.length).equals(MAGIC)) throw unreadable();
+      if (file[MAGIC.length] !== VERSION) {
+        throw new PseudonymError(`The directory in ${homeDir()} was written by a newer version of pseudonym: update it.`);
+      }
+      const nonce = file.subarray(HEADER.length, HEADER.length + 12);
+      const tag = file.subarray(HEADER.length + 12, HEADER.length + 28);
+      try {
+        const decipher = createDecipheriv("aes-256-gcm", directory, nonce);
+        decipher.setAAD(HEADER);
+        decipher.setAuthTag(tag);
+        const plain = Buffer.concat([decipher.update(file.subarray(HEADER.length + 28)), decipher.final()]);
+        return JSON.parse(plain.toString("utf8")) as Data;
+      } catch {
+        throw unreadable();
+      }
+    },
+    encode(data) {
+      const nonce = randomBytes(12);
+      const cipher = createCipheriv("aes-256-gcm", directory, nonce);
+      cipher.setAAD(HEADER);
+      const body = Buffer.concat([cipher.update(JSON.stringify(data), "utf8"), cipher.final()]);
+      return Buffer.concat([HEADER, nonce, cipher.getAuthTag(), body]);
+    },
+    matcher: (identifier) => createHmac("sha256", matchers).update(JSON.stringify([identifier.kind, identifier.value])).digest("base64url"),
+    newAlias(service, best, link, taken) {
+      let alias = aliasFor(aliases, service, best, link);
+      for (let length = ALIAS_LENGTH + 1; taken(alias); length++) alias = aliasFor(aliases, service, best, link, length);
+      return alias;
+    },
+  };
+}
+
+/**
+ * The plain store: readable JSON, no key. Aliases are random and kept in the directory; identifiers are kept in
+ * clear as `kind:value`. Protection is left to the folder's permissions.
+ */
+function plainStore(): Store {
+  return {
+    mode: "plain",
+    file: plainPath(),
+    decode(bytes) {
+      let json: { format?: unknown; version?: unknown; entries?: unknown };
+      try {
+        json = JSON.parse(bytes.toString("utf8"));
+      } catch {
+        throw new PseudonymError(`The directory in ${plainPath()} isn't valid JSON. Nothing was changed: fix or restore the file.`);
+      }
+      if (json.format !== PLAIN_FORMAT || !Array.isArray(json.entries)) {
+        throw new PseudonymError(`${plainPath()} isn't a pseudonym directory. Nothing was changed.`);
+      }
+      if (json.version !== PLAIN_VERSION) throw new PseudonymError(`The directory in ${plainPath()} was written by a newer version of pseudonym: update it.`);
+      return { entries: json.entries as Entry[] };
+    },
+    encode: (data) => Buffer.from(`${JSON.stringify({ format: PLAIN_FORMAT, version: PLAIN_VERSION, entries: data.entries }, null, 2)}\n`, "utf8"),
+    matcher: (identifier) => `${identifier.kind}:${identifier.value}`,
+    newAlias(_service, _best, _link, taken) {
+      for (;;) {
+        const alias = `A-${base32(randomBytes(8), ALIAS_LENGTH)}`;
+        if (!taken(alias)) return alias;
+      }
+    },
+  };
+}
+
+const exists = (file: string) => stat(file).then(() => true, (error: unknown) => (isCode(error, "ENOENT") ? false : Promise.reject(error)));
+
+/**
+ * The store of the configured mode, after checking the folder agrees: a directory of the other mode, or both, is an
+ * error that says what to do. Never a silent switch, and never a conversion.
+ */
+async function openStore(): Promise<Store> {
+  const mode = storageMode();
+  const [hasEncrypted, hasPlain] = await Promise.all([exists(encryptedPath()), exists(plainPath())]);
+  if (hasEncrypted && hasPlain) {
+    throw new PseudonymError(`${homeDir()} holds both an encrypted and a plain directory: keep one (move the other away), then try again.`);
+  }
+  if (mode === "encrypted" && hasPlain) {
+    throw new PseudonymError(
+      `${homeDir()} holds a plain directory (directory.json), but the storage is "encrypted". Set PSEUDONYM_STORAGE=plain to use it, or convert it with "pseudonym migrate --to encrypted" (with PSEUDONYM_STORAGE=plain).`,
+    );
+  }
+  if (mode === "plain" && hasEncrypted) {
+    throw new PseudonymError(
+      `${homeDir()} holds an encrypted directory (directory.enc), but the storage is "plain". Unset PSEUDONYM_STORAGE to use it, or convert it with "pseudonym migrate --to plain".`,
+    );
+  }
+  return mode === "plain" ? plainStore() : encryptedStore();
+}
+
+async function read(store: Store): Promise<Data> {
+  let bytes: Buffer;
   try {
-    file = await readFile(directoryPath());
+    bytes = await readFile(store.file);
   } catch (error) {
     if (isCode(error, "ENOENT")) return { entries: [] };
     throw error;
   }
-  if (file.length < HEADER.length + 28 || !file.subarray(0, MAGIC.length).equals(MAGIC)) throw unreadable();
-  if (file[MAGIC.length] !== VERSION) {
-    throw new PseudonymError(`The directory in ${homeDir()} was written by a newer version of pseudonym: update it.`);
-  }
-  const nonce = file.subarray(HEADER.length, HEADER.length + 12);
-  const tag = file.subarray(HEADER.length + 12, HEADER.length + 28);
-  try {
-    const decipher = createDecipheriv("aes-256-gcm", k.directory, nonce);
-    decipher.setAAD(HEADER);
-    decipher.setAuthTag(tag);
-    const plain = Buffer.concat([decipher.update(file.subarray(HEADER.length + 28)), decipher.final()]);
-    return JSON.parse(plain.toString("utf8")) as Data;
-  } catch {
-    throw unreadable();
-  }
+  return store.decode(bytes);
 }
 
-/** AES-256-GCM with a fresh nonce, to a temporary file renamed over the old one: a crash never leaves half a file. */
-async function write(k: Keys, data: Data): Promise<void> {
-  const nonce = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", k.directory, nonce);
-  cipher.setAAD(HEADER);
-  const body = Buffer.concat([cipher.update(JSON.stringify(data), "utf8"), cipher.final()]);
-  const temporary = `${directoryPath()}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
-  await writeFile(temporary, Buffer.concat([HEADER, nonce, cipher.getAuthTag(), body]), { mode: 0o600 });
+/** `bytes` to a temporary file renamed over `file`: a crash never leaves half a file. Readable by the user only. */
+async function writeAtomically(file: string, bytes: Buffer): Promise<void> {
+  const temporary = `${file}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
+  await writeFile(temporary, bytes, { mode: 0o600 });
   // Windows refuses the rename while another process (an antivirus, a reader) has the file open: retry.
   for (let attempt = 0; ; attempt++) {
     try {
-      await rename(temporary, directoryPath());
+      await rename(temporary, file);
       break;
     } catch (error) {
       if (!isCode(error, "EPERM", "EBUSY", "EACCES") || attempt >= 20) {
@@ -121,12 +238,8 @@ async function write(k: Keys, data: Data): Promise<void> {
   stats.writes++;
 }
 
-/**
- * Runs `change` on the directory under the lock file and writes the result. A lock older than LOCK_STALE_MS
- * is taken as left by a crashed process and broken (changes hold it for milliseconds).
- */
-async function update<T>(change: (data: Data, k: Keys) => T): Promise<T> {
-  const k = await keys();
+/** Runs `work` under the lock file. A lock older than LOCK_STALE_MS is taken as left by a crashed process and broken. */
+async function locked<T>(work: () => Promise<T>): Promise<T> {
   await ensureHome();
   const started = Date.now();
   for (;;) {
@@ -143,23 +256,65 @@ async function update<T>(change: (data: Data, k: Keys) => T): Promise<T> {
     } else await sleep(10 + Math.random() * 30);
   }
   try {
-    const data = await read(k);
-    const result = change(data, k);
-    await write(k, data);
-    return result;
+    return await work();
   } finally {
     await unlink(lockPath()).catch(() => undefined);
   }
 }
 
-/** The directory as it is now, without the lock: writes replace the file whole, so a read never sees half of one. */
-async function snapshot(): Promise<{ data: Data; k: Keys }> {
-  const k = await keys();
-  return { data: await read(k), k };
+/** Runs `change` on the directory under the lock and writes the result (changes hold the lock for milliseconds). */
+async function update<T>(change: (data: Data, store: Store) => T): Promise<T> {
+  const store = await openStore();
+  return locked(async () => {
+    const data = await read(store);
+    const result = change(data, store);
+    await writeAtomically(store.file, store.encode(data));
+    return result;
+  });
 }
 
-const matcher = (k: Keys, identifier: Identifier) =>
-  createHmac("sha256", k.matchers).update(JSON.stringify([identifier.kind, identifier.value])).digest("base64url");
+/** The directory as it is now, without the lock: writes replace the file whole, so a read never sees half of one. */
+async function snapshot(): Promise<{ data: Data; store: Store }> {
+  const store = await openStore();
+  return { data: await read(store), store };
+}
+
+/**
+ * Converts the directory to the other storage mode (ADR-010): the target is written from the source, then the source
+ * is moved aside to `<file>.<date>.bak`, never deleted. Aliases, names, service ids and links are kept. Going to
+ * plain, emails and institutional ids can't come along (the encrypted directory only has their HMACs): people
+ * without a service id can't be recognized again. Refuses when there is nothing to convert or the target exists.
+ */
+export async function migrate(to: StorageMode): Promise<{ people: number; unmatchable: number; lostMatchers: number; backup: string }> {
+  checkMode(to);
+  const [source, target] = to === "plain" ? [encryptedPath(), plainPath()] : [plainPath(), encryptedPath()];
+  if (!(await exists(source))) throw new PseudonymError(`There is no ${to === "plain" ? "encrypted" : "plain"} directory in ${homeDir()} to convert.`);
+  if (await exists(target)) throw new PseudonymError(`${target} already exists: nothing was changed. Move it away first if it's not needed.`);
+  const from = to === "plain" ? await encryptedStore() : plainStore();
+  const into = to === "plain" ? plainStore() : await encryptedStore();
+  return locked(async () => {
+    const data = await read(from);
+    let unmatchable = 0;
+    let lostMatchers = 0;
+    for (const entry of data.entries) {
+      if (to === "plain") {
+        if (entry.matchers.length) lostMatchers++;
+        entry.matchers = [];
+        if (!entry.services.some((s) => s.id !== undefined)) unmatchable++;
+      } else {
+        // Plain matchers are "kind:value": the encrypted store turns them into HMACs under the key.
+        entry.matchers = entry.matchers.map((m) => {
+          const at = m.indexOf(":");
+          return into.matcher({ kind: m.slice(0, at) as Identifier["kind"], value: m.slice(at + 1) });
+        });
+      }
+    }
+    await writeAtomically(target, into.encode(data));
+    const backup = `${source}.${new Date().toISOString().replace(/[:.]/g, "-")}.bak`;
+    await rename(source, backup);
+    return { people: data.entries.length, unmatchable, lostMatchers, backup };
+  });
+}
 
 const hasService = (entry: Entry, service: string) => entry.services.some((s) => s.service === service);
 
@@ -173,7 +328,7 @@ function checkPerson(person: Person): void {
   if (typeof person.displayName !== "string") throw new PseudonymError("A person needs a displayName.");
 }
 
-function rememberOne(data: Data, k: Keys, person: Person, now: string): string {
+function rememberOne(data: Data, store: Store, person: Person, now: string): string {
   const identifiers = normalizeIdentifiers(person.identifiers);
   const link = linkingOn(person.link);
   // Without linking, only entries already met in this service count: the same email elsewhere is someone
@@ -185,7 +340,7 @@ function rememberOne(data: Data, k: Keys, person: Person, now: string): string {
     if (identifier.kind === "serviceUserId") {
       return candidates.find((entry) => entry.services.some((s) => s.service === person.service && s.id === identifier.value));
     }
-    const m = matcher(k, identifier);
+    const m = store.matcher(identifier);
     return candidates.find((entry) => entry.matchers.includes(m));
   });
   // Identifiers are strongest first: the first match wins, and other people matched are never merged into it.
@@ -203,20 +358,19 @@ function rememberOne(data: Data, k: Keys, person: Person, now: string): string {
     else if (serviceUserId) own.id = serviceUserId;
     identifiers.forEach((identifier, i) => {
       if (identifier.kind === "serviceUserId" || matched[i]) return;
-      winner.matchers.push(matcher(k, identifier));
+      winner.matchers.push(store.matcher(identifier));
     });
     return winner.alias;
   }
 
   const best = identifiers[0]!;
   const taken = (alias: string) => data.entries.some((entry) => entry.alias === alias || entry.links.includes(alias));
-  let alias = aliasFor(k.aliases, person.service, best, link);
-  for (let length = ALIAS_LENGTH + 1; taken(alias); length++) alias = aliasFor(k.aliases, person.service, best, link, length);
+  const alias = store.newAlias(person.service, best, link, taken);
   data.entries.push({
     alias,
     displayName: person.displayName,
     services: [serviceUserId ? { service: person.service, id: serviceUserId } : { service: person.service }],
-    matchers: identifiers.filter((i) => i.kind !== "serviceUserId").map((i) => matcher(k, i)),
+    matchers: identifiers.filter((i) => i.kind !== "serviceUserId").map((i) => store.matcher(i)),
     links: [],
     firstSeen: now,
     lastSeen: now,
@@ -239,7 +393,7 @@ export async function remember(input: Person | Person[]): Promise<string | strin
   people.forEach(checkPerson);
   if (people.length === 0) return [];
   const now = new Date().toISOString();
-  const aliases = await update((data, k) => people.map((person) => rememberOne(data, k, person, now)));
+  const aliases = await update((data, store) => people.map((person) => rememberOne(data, store, person, now)));
   return Array.isArray(input) ? aliases : aliases[0]!;
 }
 

@@ -30,7 +30,7 @@ Los alias no distinguen mayúsculas de minúsculas allí donde la librería los 
 
 ## Directorio {#directory}
 
-Un fichero local cifrado con las personas que ha conocido tu programa, compartido por todos los programas del equipo que usan la librería. De cada persona guarda:
+Un fichero local con las personas que ha conocido tu programa, cifrado por defecto (también puede ser [JSON plano](storage.md), sin clave), compartido por todos los programas del equipo que usan la librería. De cada persona guarda:
 
 - su alias, y cualquier alias [enlazado](../cli/tidying-the-directory.md#link-two-aliases) con él;
 - su nombre visible (lo que muestra `pseudonym whois`);
