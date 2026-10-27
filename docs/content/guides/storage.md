@@ -21,25 +21,72 @@ What the model receives is exactly the same in both: aliases such as `A-WEBJQH` 
 
 ## Encrypted storage (the default)
 
-![A stack of records goes into a closed safe; next to it, a single key that is the only way to open it](/img/storage-encrypted.jpg)
-
-Think of a **safe and its key**. The list of who is who goes into the safe (`directory.enc`); the key (`key`) is kept apart. Anyone can see the safe, but only whoever holds the key can open it. The same key also *makes* the aliases: it mixes with each person's email or id to give a code that is always the same for that person and can't be undone without the key.
-
-### What happens when your program remembers someone
+Think of a **safe and its key**. The list of who is who goes into the safe (`directory.enc`); the key (`key`) is kept apart. Only whoever holds the key can open the safe. The same key also *makes* the aliases: mixed with a person's email or id, it gives a code that is always the same for that person and can't be undone without the key.
 
 ```mermaid
-flowchart LR
-  P["Marta Quiroga<br/>marta.q@school.example.org"] --> R["remember()"]
-  K[("key<br/>32 random bytes")] --> R
-  R -->|"HMAC of the email<br/>with the key"| A["A-WEBJQH"]
-  A --> M["the model"]
-  R -->|"encrypted with the key"| D[("directory.enc")]
+flowchart TB
+  subgraph F["pseudonym's folder"]
+    K["<b>key</b><br/>32 random bytes<br/>makes the aliases and opens the directory"]
+    U["<b>used</b><br/>an empty file<br/>says: a key was created here"]
+    D["<b>directory.enc</b><br/>who is who, encrypted with the key<br/>unreadable without it"]
+  end
 ```
 
-1. The first time any program uses pseudonym, it creates the **key**: 32 random bytes.
-2. `remember()` combines the person's strongest identifier (here, the email) with the key (an [HMAC](https://www.rfc-editor.org/rfc/rfc2104)): `A-WEBJQH`. Same person, same key: same alias, always.
-3. The person's name, service id and *fingerprints* of their email and id are added to the directory, which is then encrypted with the key and saved.
-4. Only `A-WEBJQH` goes to the model.
+### Remembering someone for the first time
+
+```mermaid
+sequenceDiagram
+  participant P as Your program
+  participant L as pseudonym
+  participant K as key
+  participant D as directory.enc
+  participant M as The model
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>K: 2. read the key (the very first time, create it: 32 random bytes)
+  L->>D: 3. read the file and decrypt it with the key
+  Note over L,K: 4. Marta isn't there: alias = HMAC(key, her email) = A-WEBJQH
+  Note over L,K: 5. add Marta: name, Moodle id, HMAC of her email (never the email)
+  L->>D: 6. encrypt the directory with the key and save it
+  L-->>P: 7. A-WEBJQH
+  P->>M: 8. A-WEBJQH handed in practice 2
+```
+
+The model only gets `A-WEBJQH` (step 8). The alias comes from the key and the email (step 4, an [HMAC](https://www.rfc-editor.org/rfc/rfc2104)): the same person always gives the same alias, and without the key nobody can work back from the alias to the email.
+
+### Remembering her again
+
+```mermaid
+sequenceDiagram
+  participant P as Your program
+  participant L as pseudonym
+  participant K as key
+  participant D as directory.enc
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>K: 2. read the key
+  L->>D: 3. read the file and decrypt it with the key
+  Note over L,K: 4. the HMAC of her email matches Marta's entry
+  L->>D: 5. update her last-seen date, encrypt and save
+  L-->>P: 6. A-WEBJQH, the same alias as before
+```
+
+She is recognized by her email, her institutional id or her Moodle id (step 4): if her email changes but her Moodle id doesn't, she keeps `A-WEBJQH`.
+
+### Finding out who an alias is
+
+```mermaid
+sequenceDiagram
+  actor T as You, in your terminal
+  participant C as pseudonym CLI
+  participant K as key
+  participant D as directory.enc
+  T->>C: 1. pseudonym whois A-WEBJQH
+  C->>K: 2. read the key
+  C->>D: 3. read the file and decrypt it with the key
+  Note over C,K: 4. look up A-WEBJQH
+  C-->>T: 5. Marta Quiroga, moodle@campus.example.org, first and last seen
+```
+
+Without the right key, step 3 fails: the directory can't be read, and pseudonym stops instead of guessing.
 
 ### What's in the folder
 
@@ -88,29 +135,65 @@ Once decrypted with the key, each person looks like this. The emails and ids are
 
 ## Plain storage
 
-![The same stack of records goes into an open, readable folder with no lock and no key; a protective wall around it stands for the computer's own permissions](/img/storage-plain.jpg)
-
 Think of **an open binder in a locked room**. The list of who is who is an ordinary JSON file you can open in any editor; there is no key at all. What keeps it safe is the room: the operating system's permissions on the folder (only your user can read it) and, ideally, a machine or account nothing else uses.
 
-### What happens when your program remembers someone
-
 ```mermaid
-flowchart LR
-  P["Marta Quiroga<br/>marta.q@school.example.org"] --> R["remember()"]
-  R --> Q{"Already in<br/>directory.json?"}
-  Q -->|"yes"| O["her alias<br/>A-EV2VMJ"]
-  Q -->|"no"| N["a new random alias<br/>A-EV2VMJ"]
-  N -->|"saved, readable"| J[("directory.json")]
-  O --> M["the model"]
-  N --> M
+flowchart TB
+  subgraph PF["pseudonym's folder, readable only by your user"]
+    PJ["<b>directory.json</b><br/>who is who, readable JSON<br/>names, emails and ids in clear"]
+    PN["no <b>key</b>, no <b>used</b><br/>nothing else to back up"]
+  end
 ```
 
-1. There is no key: nothing is created but `directory.json`.
-2. `remember()` looks the person up in the file by their email, id or service id. If she's there, it returns her alias.
-3. If not, it draws a **random** alias (`A-EV2VMJ`) and writes the person, with her email and id in clear, to `directory.json`.
-4. Only `A-EV2VMJ` goes to the model.
+### Remembering someone for the first time
 
-Because the alias is random, it only exists in the file: forget the person and meet her again, and she gets a new one.
+```mermaid
+sequenceDiagram
+  participant P as Your program
+  participant L as pseudonym
+  participant D as directory.json
+  participant M as The model
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>D: 2. read the file (plain JSON, no key)
+  Note over L,D: 3. Marta isn't there: draw a random alias, A-EV2VMJ
+  Note over L,D: 4. add Marta: name, Moodle id, email and id in clear
+  L->>D: 5. save directory.json, readable
+  L-->>P: 6. A-EV2VMJ
+  P->>M: 7. A-EV2VMJ handed in practice 2
+```
+
+The model only gets `A-EV2VMJ` (step 7). The alias is random (step 3): it says nothing about Marta, and it only exists in the file.
+
+### Remembering her again
+
+```mermaid
+sequenceDiagram
+  participant P as Your program
+  participant L as pseudonym
+  participant D as directory.json
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>D: 2. read the file
+  Note over L,D: 3. her email matches Marta's entry
+  L->>D: 4. update her last-seen date and save
+  L-->>P: 5. A-EV2VMJ, the same alias as before
+```
+
+As long as Marta is in the file, she keeps `A-EV2VMJ`. If she's forgotten (`pseudonym forget`, `prune`) and comes back, step 3 of the first diagram happens again: a new random alias.
+
+### Finding out who an alias is
+
+```mermaid
+sequenceDiagram
+  actor T as You, in your terminal
+  participant C as pseudonym CLI
+  participant D as directory.json
+  T->>C: 1. pseudonym whois A-EV2VMJ
+  C->>D: 2. read the file
+  Note over C,D: 3. look up A-EV2VMJ
+  C-->>T: 4. Marta Quiroga, moodle@campus.example.org, first and last seen
+```
+
+Step 2 needs no key, so anyone who can open the folder can do it too, with pseudonym or with any text editor.
 
 ### What's in the folder
 
@@ -221,7 +304,7 @@ pseudonym migrate --to encrypted    # directory.json → directory.enc (with PSE
 ```mermaid
 flowchart LR
   E[("directory.enc")] -->|"migrate --to plain"| J[("directory.json")]
-  E -.->|"kept as"| B["directory.enc.(date).bak"]
+  E -.->|"kept as"| B["backup directory.enc.date.bak"]
 ```
 
 - It asks you to type the mode to confirm (`--yes` in a script), writes the new file, and moves the original aside to `<file>.<date>.bak`: nothing is deleted.

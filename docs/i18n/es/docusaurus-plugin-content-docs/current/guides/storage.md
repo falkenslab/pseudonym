@@ -21,25 +21,72 @@ Lo que recibe el modelo es exactamente lo mismo en los dos: alias como `A-WEBJQH
 
 ## Almacenamiento cifrado (por defecto) {#encrypted-storage-the-default}
 
-![Un montón de fichas entra en una caja fuerte cerrada; a su lado, una única llave que es la única forma de abrirla](/img/storage-encrypted.jpg)
-
-Piensa en **una caja fuerte y su llave**. La lista de quién es quién va dentro de la caja fuerte (`directory.enc`); la clave (`key`) se guarda aparte. Cualquiera puede ver la caja fuerte, pero solo quien tiene la clave puede abrirla. La misma clave también *fabrica* los alias: se mezcla con el correo o el id de cada persona para dar un código que siempre es el mismo para esa persona y que no se puede deshacer sin la clave.
-
-### Qué pasa cuando tu programa recuerda a alguien {#what-happens-when-your-program-remembers-someone}
+Piensa en **una caja fuerte y su llave**. La lista de quién es quién va dentro de la caja fuerte (`directory.enc`); la clave (`key`) se guarda aparte. Solo quien tiene la clave puede abrir la caja. Además, la misma clave *fabrica* los alias: combinada con el email o el id de una persona, da un código que siempre es el mismo para esa persona y que no se puede deshacer sin la clave.
 
 ```mermaid
-flowchart LR
-  P["Marta Quiroga<br/>marta.q@school.example.org"] --> R["remember()"]
-  K[("key<br/>32 bytes aleatorios")] --> R
-  R -->|"HMAC del email<br/>con la clave"| A["A-WEBJQH"]
-  A --> M["el modelo"]
-  R -->|"cifrado con la clave"| D[("directory.enc")]
+flowchart TB
+  subgraph F["Carpeta de pseudonym"]
+    K["<b>key</b><br/>32 bytes aleatorios<br/>fabrica los alias y abre el directorio"]
+    U["<b>used</b><br/>un fichero vacío<br/>dice: aquí se creó una clave"]
+    D["<b>directory.enc</b><br/>quién es quién, cifrado con la clave<br/>ilegible sin ella"]
+  end
 ```
 
-1. La primera vez que un programa usa pseudonym, crea la **clave**: 32 bytes aleatorios.
-2. `remember()` combina el identificador más fuerte de la persona (aquí, el correo) con la clave (un [HMAC](https://www.rfc-editor.org/rfc/rfc2104)): `A-WEBJQH`. Misma persona, misma clave: mismo alias, siempre.
-3. El nombre de la persona, su id de servicio y las *huellas* de su correo y de su id se añaden al directorio, que después se cifra con la clave y se guarda.
-4. Al modelo solo le llega `A-WEBJQH`.
+### Recordar a alguien por primera vez {#remembering-someone-for-the-first-time}
+
+```mermaid
+sequenceDiagram
+  participant P as Tu programa
+  participant L as pseudonym
+  participant K as key
+  participant D as directory.enc
+  participant M as El modelo
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>K: 2. lee la clave (la primera vez de todas, la crea: 32 bytes aleatorios)
+  L->>D: 3. lee el fichero y lo descifra con la clave
+  Note over L,K: 4. Marta no está: alias = HMAC(clave, su email) = A-WEBJQH
+  Note over L,K: 5. añade a Marta: nombre, id de Moodle, HMAC de su email (nunca el email)
+  L->>D: 6. cifra el directorio con la clave y lo guarda
+  L-->>P: 7. A-WEBJQH
+  P->>M: 8. A-WEBJQH entregó la práctica 2
+```
+
+El modelo solo recibe `A-WEBJQH` (paso 8). El alias sale de la clave y del email (paso 4, un [HMAC](https://www.rfc-editor.org/rfc/rfc2104)): la misma persona da siempre el mismo alias, y sin la clave nadie puede pasar del alias al email.
+
+### Recordarla de nuevo {#remembering-her-again}
+
+```mermaid
+sequenceDiagram
+  participant P as Tu programa
+  participant L as pseudonym
+  participant K as key
+  participant D as directory.enc
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>K: 2. lee la clave
+  L->>D: 3. lee el fichero y lo descifra con la clave
+  Note over L,K: 4. el HMAC de su email coincide con la entrada de Marta
+  L->>D: 5. actualiza la fecha en que se la vio por última vez, cifra y guarda
+  L-->>P: 6. A-WEBJQH, el mismo alias que antes
+```
+
+Se la reconoce por su email, su id institucional o su id de Moodle (paso 4): si cambia de email pero conserva el id de Moodle, sigue siendo `A-WEBJQH`.
+
+### Averiguar quién es un alias {#finding-out-who-an-alias-is}
+
+```mermaid
+sequenceDiagram
+  actor T as Tú, en tu terminal
+  participant C as CLI de pseudonym
+  participant K as key
+  participant D as directory.enc
+  T->>C: 1. pseudonym whois A-WEBJQH
+  C->>K: 2. lee la clave
+  C->>D: 3. lee el fichero y lo descifra con la clave
+  Note over C,K: 4. busca A-WEBJQH
+  C-->>T: 5. Marta Quiroga, moodle@campus.example.org, primera y última vez que se la vio
+```
+
+Sin la clave correcta, el paso 3 falla: el directorio no se puede leer, y pseudonym se detiene en vez de adivinar.
 
 ### Qué hay en la carpeta {#whats-in-the-folder}
 
@@ -88,29 +135,65 @@ Una vez descifrado con la clave, cada persona tiene este aspecto. Los correos y 
 
 ## Almacenamiento plano {#plain-storage}
 
-![El mismo montón de fichas entra en una carpeta abierta y legible, sin cerradura ni llave; un muro protector a su alrededor representa los permisos del propio equipo](/img/storage-plain.jpg)
-
-Piensa en **una carpeta abierta en una habitación cerrada con llave**. La lista de quién es quién es un fichero JSON normal que puedes abrir con cualquier editor; no hay ninguna clave. Lo que lo mantiene a salvo es la habitación: los permisos del sistema operativo sobre la carpeta (solo tu usuario puede leerla) y, a ser posible, una máquina o una cuenta que no use nada más.
-
-### Qué pasa cuando tu programa recuerda a alguien {#what-happens-when-your-program-remembers-someone-1}
+Piensa en **una carpeta abierta en una habitación cerrada con llave**. La lista de quién es quién es un fichero JSON normal que puedes abrir con cualquier editor; no hay ninguna clave. Lo que lo protege es la habitación: los permisos del sistema operativo sobre la carpeta (solo tu usuario puede leerla) y, a ser posible, un equipo o una cuenta que no use nada más.
 
 ```mermaid
-flowchart LR
-  P["Marta Quiroga<br/>marta.q@school.example.org"] --> R["remember()"]
-  R --> Q{"¿Ya está en<br/>directory.json?"}
-  Q -->|"sí"| O["su alias<br/>A-EV2VMJ"]
-  Q -->|"no"| N["un alias aleatorio nuevo<br/>A-EV2VMJ"]
-  N -->|"guardado, legible"| J[("directory.json")]
-  O --> M["el modelo"]
-  N --> M
+flowchart TB
+  subgraph PF["Carpeta de pseudonym, que solo lee tu usuario"]
+    PJ["<b>directory.json</b><br/>quién es quién, JSON legible<br/>nombres, emails e ids en claro"]
+    PN["ni <b>key</b> ni <b>used</b><br/>nada más de lo que hacer copia"]
+  end
 ```
 
-1. No hay clave: no se crea nada más que `directory.json`.
-2. `remember()` busca a la persona en el fichero por su correo, su id o su id de servicio. Si está, devuelve su alias.
-3. Si no, saca un alias **aleatorio** (`A-EV2VMJ`) y escribe a la persona, con su correo y su id en claro, en `directory.json`.
-4. Al modelo solo le llega `A-EV2VMJ`.
+### Recordar a alguien por primera vez {#remembering-someone-for-the-first-time-1}
 
-Como el alias es aleatorio, solo existe en el fichero: si olvidas a la persona y la vuelves a encontrar, recibe uno nuevo.
+```mermaid
+sequenceDiagram
+  participant P as Tu programa
+  participant L as pseudonym
+  participant D as directory.json
+  participant M as El modelo
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>D: 2. lee el fichero (JSON plano, sin clave)
+  Note over L,D: 3. Marta no está: sortea un alias aleatorio, A-EV2VMJ
+  Note over L,D: 4. añade a Marta: nombre, id de Moodle, email e id en claro
+  L->>D: 5. guarda directory.json, legible
+  L-->>P: 6. A-EV2VMJ
+  P->>M: 7. A-EV2VMJ entregó la práctica 2
+```
+
+El modelo solo recibe `A-EV2VMJ` (paso 7). El alias es aleatorio (paso 3): no dice nada de Marta y solo existe en el fichero.
+
+### Recordarla de nuevo {#remembering-her-again-1}
+
+```mermaid
+sequenceDiagram
+  participant P as Tu programa
+  participant L as pseudonym
+  participant D as directory.json
+  P->>L: 1. remember(Marta Quiroga, marta.q@school.example.org)
+  L->>D: 2. lee el fichero
+  Note over L,D: 3. su email coincide con la entrada de Marta
+  L->>D: 4. actualiza la fecha en que se la vio por última vez y guarda
+  L-->>P: 5. A-EV2VMJ, el mismo alias que antes
+```
+
+Mientras Marta esté en el fichero, conserva `A-EV2VMJ`. Si se la olvida (`pseudonym forget`, `prune`) y vuelve, se repite el paso 3 del primer diagrama: un alias aleatorio nuevo.
+
+### Averiguar quién es un alias {#finding-out-who-an-alias-is-1}
+
+```mermaid
+sequenceDiagram
+  actor T as Tú, en tu terminal
+  participant C as CLI de pseudonym
+  participant D as directory.json
+  T->>C: 1. pseudonym whois A-EV2VMJ
+  C->>D: 2. lee el fichero
+  Note over C,D: 3. busca A-EV2VMJ
+  C-->>T: 4. Marta Quiroga, moodle@campus.example.org, primera y última vez que se la vio
+```
+
+El paso 2 no necesita clave, así que cualquiera que pueda abrir la carpeta puede hacer lo mismo, con pseudonym o con cualquier editor de texto.
 
 ### Qué hay en la carpeta {#whats-in-the-folder-1}
 
@@ -221,7 +304,7 @@ pseudonym migrate --to encrypted    # directory.json → directory.enc (with PSE
 ```mermaid
 flowchart LR
   E[("directory.enc")] -->|"migrate --to plain"| J[("directory.json")]
-  E -.->|"se guarda como"| B["directory.enc.(date).bak"]
+  E -.->|"se guarda como"| B["copia directory.enc.fecha.bak"]
 ```
 
 - Te pide que escribas el modo para confirmar (`--yes` en un script), escribe el fichero nuevo y aparta el original como `<file>.<date>.bak`: no se borra nada.

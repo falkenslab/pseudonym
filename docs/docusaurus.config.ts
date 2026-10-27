@@ -83,6 +83,14 @@ const config: Config = {
 
   themeConfig: {
     colorMode: { respectPrefersColorScheme: true },
+    // Sequence diagrams explain the steps: readable text, wrapped messages, no repeated row of participants.
+    mermaid: {
+      theme: { light: "neutral", dark: "dark" },
+      options: {
+        sequence: { wrap: true, width: 170, messageFontSize: 15, actorFontSize: 15, noteFontSize: 14, mirrorActors: false, messageMargin: 30, boxMargin: 8 },
+        flowchart: { htmlLabels: true },
+      },
+    },
     navbar: {
       title: "pseudonym",
       logo: { alt: "pseudonym", src: "img/logo.svg", srcDark: "img/logo-dark.svg" },
